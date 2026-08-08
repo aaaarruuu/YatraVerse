@@ -2011,18 +2011,6 @@ This allows the team to gain practical experience in:
 
 ---
 
-# 👨‍💻 Contributors
-
-Add your team members here:
-
-```text
-1. Name — Android / Frontend
-2. Name — Spring Boot / Backend
-3. Name — LLM / RAG
-4. Name — ML / Computer Vision
-```
-
----
 
 # 📌 Project Status
 
