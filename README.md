@@ -2028,7 +2028,6 @@ This allows the team to gain practical experience in:
 
 ---
 
-
 # 📌 Project Status
 
 ```text
