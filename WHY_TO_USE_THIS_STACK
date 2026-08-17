@@ -1,0 +1,20 @@
+| Feature           | **I recommend**                           | Instead of                  | Technical reason                                                           |
+| ----------------- | ----------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
+| Authentication    | **Spring Security + JWT + PostgreSQL**    | Firebase Auth               | Learn password hashing, JWT, filters, roles, authorization, refresh tokens |
+| Trip Planning     | **Python + RAG**                          | Simple LLM API              | Learn embeddings, retrieval, chunking, ranking and prompting               |
+| Smart Itinerary   | **Spring Boot + Python AI**               | Only Spring Boot            | Learn microservice/API communication                                       |
+| Heritage Scanner  | **PyTorch + OpenCV**                      | Ready-made CV API           | Learn image preprocessing, CNN/transfer learning, inference                |
+| Tourism Knowledge | **RAG + PGVector**                        | Firebase/FAISS              | Learn vector search + SQL + metadata filtering                             |
+| Crowd Prediction  | **Python + Scikit-learn/PyTorch**         | External prediction API     | Actually learn ML                                                          |
+| Eco Score         | **Java rule engine**                      | AI                          | Learn deterministic business logic                                         |
+| Maps              | **OpenStreetMap + MapLibre**              | Google Maps                 | Less vendor lock-in; learn geospatial concepts                             |
+| Notifications     | **WebSocket + Android notifications**     | Firebase FCM                | Learn real-time communication                                              |
+| Image Storage     | **MinIO / S3-compatible storage**         | Firebase Storage            | Learn object storage and file APIs                                         |
+| Main DB           | **PostgreSQL**                            | Firebase/Firestore          | Learn real relational database design                                      |
+| Vector DB         | **PGVector**                              | FAISS                       | Learn SQL + vector similarity together                                     |
+| Mobile            | **Android Studio + Kotlin**               | —                           | Native Android development                                                 |
+| Backend           | **Spring Boot**                           | —                           | Strong backend engineering                                                 |
+| AI Service        | **Python + FastAPI**                      | Flask                       | Better fit for typed API/service architecture                              |
+| LLM               | **Qwen3 8B + Transformers/PyTorch**       | Ollama                      | Learn actual model loading/inference instead of only calling Ollama        |
+| Embeddings        | **BGE-M3 / multilingual embedding model** | Basic sentence-transformers | Better RAG learning and multilingual tourism use cases                     |
+| AI framework      | **Spring AI selectively**                 | Everything manually         | Use it where useful, but understand the underlying APIs first              |
