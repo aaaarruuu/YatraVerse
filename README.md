@@ -4,26 +4,29 @@
 
 YatraVerse AI is an AI-powered smart tourism ecosystem that combines **personalized trip planning, intelligent itinerary generation, heritage exploration, tourist safety, sustainable travel, local experiences, community interaction, and tourism analytics** into a single Android application.
 
-The project is also designed as a **learning-focused AI engineering project**, where the team builds a small tourism-domain **Language Model (YatraLM) from scratch**, followed by **RAG (Retrieval-Augmented Generation)**, embeddings, vector search, and AI/ML services.
+The project is also designed as a **learning-focused AI engineering project**, where the team builds a full RAG (Retrieval-Augmented Generation) pipeline on top of an open-weight LLM (**Qwen3 8B**), along with embeddings, vector search, and supporting AI/ML services — with a strong emphasis on understanding how each layer of the stack actually works rather than relying on managed/vendor services wherever a learning opportunity exists.
 
 ---
 
 ## 📌 Table of Contents
 
 - [Project Overview](#-project-overview)
+- [Technology Decisions](#-technology-decisions--why)
 - [Project Objectives](#-project-objectives)
 - [Key Features](#-key-features)
 - [System Architecture](#-system-architecture)
 - [Technology Stack](#-technology-stack)
 - [Project Structure](#-project-structure)
-- [YatraLM - Our Own LLM](#-yatralm---our-own-llm)
-- [LLM Development Roadmap](#-llm-development-roadmap)
+- [LLM Service — Qwen3 8B](#-llm-service--qwen3-8b)
 - [RAG Architecture](#-rag-architecture)
 - [AI/ML Components](#-aiml-components)
 - [Android Application](#-android-application)
 - [Backend Architecture](#-backend-architecture)
 - [Database](#-database)
-- [Firebase](#-firebase)
+- [Authentication](#-authentication)
+- [Real-Time Notifications](#-real-time-notifications)
+- [Object Storage](#-object-storage)
+- [Maps](#-maps)
 - [Team Collaboration](#-team-collaboration)
 - [Git Workflow](#-git-workflow)
 - [Installation](#-installation)
@@ -33,7 +36,6 @@ The project is also designed as a **learning-focused AI engineering project**, w
 - [Testing](#-testing)
 - [Security](#-security)
 - [Future Scope](#-future-scope)
-- [Contributors](#-contributors)
 - [Project Status](#-project-status)
 
 ---
@@ -63,20 +65,53 @@ Android Development
         +
 Spring Boot
         +
-PostgreSQL
+Spring Security (JWT)
         +
-Firebase
+PostgreSQL + PGVector
+        +
+MinIO (Object Storage)
+        +
+WebSocket (Real-time)
+        +
+OpenStreetMap / MapLibre
         +
 Machine Learning
         +
 Computer Vision
         +
-LLM
+Qwen3 8B (LLM)
         +
 RAG
-        +
-Vector Search
 ```
+
+---
+
+# 🔧 Technology Decisions — Why
+
+The stack intentionally favors self-hosted, learnable components over fully managed vendor services, so the team gains hands-on engineering experience at every layer. Summary of key decisions:
+
+| Feature | We use | Instead of | Reason |
+|---|---|---|---|
+| Authentication | **Spring Security + JWT + PostgreSQL** | Firebase Auth | Learn password hashing, JWT issuing/validation, security filters, roles, refresh tokens |
+| Trip Planning | **Python + RAG** | Simple LLM API wrapper | Learn embeddings, retrieval, chunking, ranking, and prompt construction |
+| Smart Itinerary | **Spring Boot + Python AI Service** | Spring Boot only | Learn microservice/API communication patterns |
+| Heritage Scanner | **PyTorch + OpenCV** | Ready-made CV API | Learn image preprocessing, CNN/transfer learning, and inference |
+| Tourism Knowledge | **RAG + PGVector** | Firebase/FAISS | Learn vector search combined with relational SQL and metadata filtering |
+| Crowd Prediction | **Python + Scikit-learn/PyTorch** | External prediction API | Actually learn applied ML |
+| Eco Score | **Java rule engine** | AI-generated scoring | Learn deterministic, auditable business logic |
+| Maps | **OpenStreetMap + MapLibre** | Google Maps | Avoid vendor lock-in; learn geospatial/tile concepts |
+| Notifications | **WebSocket + Android notifications** | Firebase Cloud Messaging | Learn real-time bidirectional communication |
+| Image Storage | **MinIO (S3-compatible)** | Firebase Storage | Learn self-hosted object storage and S3 APIs |
+| Main DB | **PostgreSQL** | Firebase/Firestore | Learn relational schema design at scale |
+| Vector DB | **PGVector** | FAISS | Learn SQL + vector similarity in a single database |
+| Mobile | **Android Studio + Kotlin** | — | Native Android development |
+| Backend | **Spring Boot** | — | Strong backend engineering foundation |
+| AI Service | **Python + FastAPI** | Flask | Typed, async-friendly API/service architecture |
+| LLM | **Qwen3 8B (Transformers/PyTorch)** | Ollama-only wrapper | Learn actual model loading, tokenization, and inference, not just calling a CLI |
+| Embeddings | **BGE-M3 (multilingual)** | Basic sentence-transformers model | Stronger retrieval quality and multilingual tourism support (Hindi/regional languages) |
+| AI Framework | **Spring AI (selectively)** | Everything hand-rolled | Use it where it removes boilerplate, but understand the underlying HTTP/inference calls first |
+
+> Firebase is no longer part of the core stack. It may optionally be reintroduced later for push notifications on top of WebSocket if offline delivery is required, but it is not a dependency for MVP.
 
 ---
 
@@ -100,11 +135,13 @@ Create personalized travel plans based on:
 ```text
 Android Form / Chat
         ↓
-Spring Boot API
+Spring Boot API (JWT-secured)
         ↓
-AI Service
+AI Service (FastAPI)
         ↓
-YatraLM + RAG
+RAG Retrieval (PGVector)
+        ↓
+Qwen3 8B (Transformers/PyTorch)
         ↓
 Personalized Itinerary
         ↓
@@ -131,7 +168,7 @@ User Preferences
       ↓
 Destination Data
       ↓
-Maps / Routing
+OpenStreetMap / MapLibre Routing
       ↓
 Weather Information
       ↓
@@ -161,15 +198,15 @@ The Heritage Scanner allows users to take a photograph of a monument and receive
 ```text
 Android Camera
       ↓
-Image
+Image (uploaded to MinIO)
       ↓
-Vision Model
+Vision Model (PyTorch + OpenCV)
       ↓
 Monument Identification
       ↓
-Tourism Knowledge Base
+Tourism Knowledge Base (RAG + PGVector)
       ↓
-YatraLM + RAG
+Qwen3 8B
       ↓
 Information Display
 ```
@@ -207,7 +244,7 @@ The application provides:
 - Nearby hospitals
 - Nearby police stations
 - Live location sharing
-- Emergency notifications
+- Emergency notifications (WebSocket, guaranteed delivery to connected clients)
 
 ### Architecture
 
@@ -218,14 +255,14 @@ SOS
  ↓
 GPS Location
  ↓
-Emergency Module
+Emergency Module (Spring Boot)
  ↓
-Firebase / Backend
+WebSocket Broadcast + Backend Logic
  ↓
 Emergency Contact
 ```
 
-> Emergency functionality should use deterministic application logic and verified emergency information rather than relying on an LLM.
+> Emergency functionality uses deterministic application logic and verified emergency information rather than relying on an LLM.
 
 ---
 
@@ -246,7 +283,7 @@ Example:
 Eco Travel Score: 82 / 100
 ```
 
-The score is calculated using defined rules rather than asking an LLM to perform the numerical calculation.
+The score is calculated using a **deterministic Java rule engine**, not by asking an LLM to perform the numerical calculation. The LLM may only be used to explain the score in natural language.
 
 ---
 
@@ -280,7 +317,7 @@ Possible models:
 - LightGBM
 - LSTM
 
-The LLM can explain the prediction, but the numerical prediction is handled by a dedicated ML model.
+The LLM can explain the prediction, but the numerical prediction is handled by a dedicated ML model (Python, Scikit-learn/PyTorch).
 
 ---
 
@@ -296,7 +333,7 @@ Users can:
 - Review destinations
 - Share experiences
 
-Firebase Storage can be used for media files.
+Media files are stored in **MinIO** (S3-compatible object storage).
 
 ---
 
@@ -319,22 +356,23 @@ Admin dashboard provides:
 
 | Feature | Technology |
 |---|---|
-| User Authentication | Firebase / Spring Security |
-| Trip Planning | YatraLM + RAG |
-| Smart Itinerary | Spring Boot + AI |
-| Heritage Scanner | Computer Vision |
-| Tourism Knowledge | RAG |
-| Crowd Prediction | ML |
-| Eco Score | Rule-based scoring |
-| Maps | Google Maps / OpenStreetMap |
-| Notifications | Firebase FCM |
-| Image Storage | Firebase Storage |
+| User Authentication | Spring Security + JWT |
+| Trip Planning | Qwen3 8B + RAG |
+| Smart Itinerary | Spring Boot + AI Service |
+| Heritage Scanner | Computer Vision (PyTorch + OpenCV) |
+| Tourism Knowledge | RAG + PGVector |
+| Crowd Prediction | ML (Scikit-learn/PyTorch) |
+| Eco Score | Rule-based scoring (Java) |
+| Maps | OpenStreetMap + MapLibre |
+| Notifications | WebSocket + Android notifications |
+| Image Storage | MinIO (S3-compatible) |
 | Main Database | PostgreSQL |
-| Vector Search | FAISS / pgvector |
-| Mobile Application | Android Studio |
+| Vector Search | PostgreSQL + PGVector |
+| Mobile Application | Android Studio (Kotlin) |
 | Backend | Spring Boot |
-| AI Service | Python |
-| LLM | PyTorch |
+| AI Service | Python (FastAPI) |
+| LLM | Qwen3 8B (Transformers/PyTorch) |
+| Embeddings | BGE-M3 (multilingual) |
 
 ---
 
@@ -346,15 +384,16 @@ Admin dashboard provides:
                               ▼
                   ┌─────────────────────┐
                   │   Android Mobile    │
-                  │   Kotlin / Java     │
+                  │   Kotlin            │
                   │   Android Studio    │
                   └──────────┬──────────┘
                              │
-                         REST / JSON
+                         REST / JSON / WebSocket
                              │
                              ▼
                   ┌─────────────────────┐
                   │    Spring Boot      │
+                  │  Spring Security    │
                   │    REST Backend     │
                   └──────────┬──────────┘
                              │
@@ -362,18 +401,18 @@ Admin dashboard provides:
             │                │                │
             ▼                ▼                ▼
      ┌────────────┐   ┌────────────┐   ┌─────────────┐
-     │ PostgreSQL │   │  Firebase  │   │ AI Service  │
-     │            │   │            │   │   Python    │
+     │ PostgreSQL │   │   MinIO    │   │ AI Service  │
+     │ + PGVector │   │  Storage   │   │  (FastAPI)  │
      └────────────┘   └────────────┘   └──────┬──────┘
                                               │
                            ┌──────────────────┼──────────────────┐
                            │                  │                  │
                            ▼                  ▼                  ▼
                      ┌───────────┐     ┌────────────┐     ┌───────────┐
-                     │ YatraLM   │     │    RAG     │     │ ML Models │
+                     │  Qwen3 8B │     │    RAG     │     │ ML Models │
                      │           │     │ Retrieval  │     │           │
-                     │ From      │     │ + Vector   │     │ Crowd     │
-                     │ Scratch   │     │ Search     │     │ Eco Score │
+                     │Transform- │     │ + PGVector │     │ Crowd     │
+                     │ers/PyTorch│     │  Search    │     │ Eco Score │
                      └───────────┘     └──────┬─────┘     └───────────┘
                                               │
                                               ▼
@@ -394,19 +433,17 @@ The mobile application is developed using **Android Studio**.
 ### Technologies
 
 - Kotlin
-- Java
 - Android SDK
 - XML / Jetpack Compose
 - Retrofit
 - ViewModel
 - Repository Pattern
 - Navigation Component
-- Google Maps SDK / OpenStreetMap
-- Firebase Authentication
-- Firebase Cloud Messaging
-- Firebase Storage
+- MapLibre GL Native (OpenStreetMap tiles)
 - Android Location Services
 - Android Camera APIs
+- OkHttp WebSocket client (real-time notifications)
+- JWT-aware Retrofit interceptors (auth token attach/refresh)
 
 ### Recommended Architecture
 
@@ -421,6 +458,7 @@ Android
 │
 ├── data/
 │   ├── api/
+│   ├── ws/                  # WebSocket client
 │   ├── models/
 │   └── repository/
 │
@@ -435,11 +473,11 @@ Android
 
 ## Spring Boot
 
-Spring Boot is responsible for the main business logic and REST APIs.
+Spring Boot is responsible for the main business logic, authentication, and REST/WebSocket APIs.
 
 ### Responsibilities
 
-- Authentication
+- Authentication & authorization (JWT)
 - User management
 - Trip management
 - Itinerary management
@@ -449,7 +487,7 @@ Spring Boot is responsible for the main business logic and REST APIs.
 - Booking
 - Reviews
 - Community
-- Emergency services
+- Emergency services (WebSocket broadcast)
 - Analytics
 - Communication with AI service
 
@@ -460,24 +498,28 @@ Java
 Spring Boot
 Spring Web
 Spring Data JPA
-Spring Security
-PostgreSQL
+Spring Security (JWT)
+Spring WebSocket
+PostgreSQL Driver
 Maven
 REST APIs
+Spring AI (selective use)
 ```
 
 ---
 
 # 🐘 Database
 
-## PostgreSQL
+## PostgreSQL + PGVector
 
-PostgreSQL is the primary relational database.
+PostgreSQL is the **single** primary database — for both relational data and vector search (via the `pgvector` extension). There is no separate FAISS index; vectors live alongside relational metadata for simpler filtering and joins.
 
 Possible tables:
 
 ```text
 users
+roles
+refresh_tokens
 destinations
 monuments
 trips
@@ -495,302 +537,154 @@ emergency_contacts
 crowd_predictions
 eco_scores
 tourism_events
+knowledge_chunks        -- text + pgvector embedding column
 ```
 
-For vector search, the project can initially use FAISS and later migrate to:
+Example `pgvector` column:
 
-```text
-PostgreSQL + pgvector
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE knowledge_chunks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content TEXT NOT NULL,
+    source TEXT NOT NULL,
+    embedding VECTOR(1024)   -- BGE-M3 embedding dimension
+);
+
+CREATE INDEX ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
 ```
 
 ---
 
-# 🔥 Firebase
+# 🔐 Authentication
 
-Firebase is used for supporting application services.
+Authentication is handled entirely by **Spring Security + JWT**, backed by PostgreSQL — no Firebase Auth dependency.
 
-### Firebase Authentication
-
-```text
-Login
-Signup
-Google Authentication
-User Authentication
-```
-
-### Firebase Cloud Messaging
+### Flow
 
 ```text
-Emergency notifications
-Booking notifications
-Travel notifications
-Application notifications
+Signup / Login
+      ↓
+Spring Security AuthenticationManager
+      ↓
+Password verified (BCrypt)
+      ↓
+Access Token (JWT, short-lived)
++ Refresh Token (stored, rotated)
+      ↓
+Client stores tokens securely
+      ↓
+Subsequent requests → Authorization: Bearer <token>
+      ↓
+JWT Filter validates + sets SecurityContext
 ```
 
-### Firebase Storage
+### What the team learns
+
+- BCrypt password hashing
+- JWT signing/verification (HS256/RS256)
+- Custom `OncePerRequestFilter` for token validation
+- Role-based method security (`@PreAuthorize`)
+- Refresh token rotation and revocation
+
+---
+
+# 📡 Real-Time Notifications
+
+Real-time features (emergency alerts, booking updates, community activity) are delivered via **WebSocket** (Spring WebSocket / STOMP) instead of Firebase Cloud Messaging.
+
+```text
+Client connects
+      ↓
+WebSocket handshake (JWT-authenticated)
+      ↓
+STOMP subscription (per-user / topic)
+      ↓
+Backend publishes event
+      ↓
+Client receives real-time push
+      ↓
+Android local notification shown
+```
+
+For scenarios requiring delivery while the app is fully closed/offline, a push provider can be layered in later — this is deliberately out of scope for the MVP to keep the learning focus on building real-time infra from scratch.
+
+---
+
+# 🗄️ Object Storage
+
+**MinIO** (S3-compatible) replaces Firebase Storage for:
 
 ```text
 Profile Images
 Travel Photos
 Community Media
-Heritage Images
+Heritage Scanner Images
 ```
 
-PostgreSQL remains the primary relational database.
+Backend interacts with MinIO via the AWS S3 SDK (Java) / `boto3` (Python), so the same code patterns transfer directly to any real S3-compatible provider in production.
 
 ---
 
-# 🤖 YatraLM — Our Own LLM
+# 🗺️ Maps
 
-## What is YatraLM?
+**OpenStreetMap tile data + MapLibre GL** replaces Google Maps SDK:
 
-**YatraLM** is a small tourism-domain language model developed by the team from scratch using **Python and PyTorch**.
+- Android: MapLibre GL Native
+- Routing: OSRM or GraphHopper (self-hosted or public instance)
+- Geocoding: Nominatim
 
-The purpose is not to compete with GPT/Gemini-scale models.
-
-The purpose is to understand:
-
-```text
-How an LLM actually works
-```
-
-and implement the fundamental components ourselves.
+This avoids Google Maps API billing/vendor lock-in and gives the team direct exposure to geospatial data and tile serving.
 
 ---
 
-# 🧠 YatraLM Architecture
+# 🤖 LLM Service — Qwen3 8B
+
+## What changed from the original plan
+
+The project originally proposed training a small tourism-domain LLM (**YatraLM**) completely from scratch. The team has decided to instead load and run an existing open-weight model, **Qwen3 8B**, via Hugging Face **Transformers/PyTorch**, and to build the RAG, prompting, and (optionally) fine-tuning layers around it.
+
+This still delivers strong LLM-engineering learning — model loading, tokenization, quantization, inference optimization, prompt engineering, and optionally LoRA fine-tuning — without the multi-month cost of training a transformer from random weights.
+
+## LLM Service Responsibilities
 
 ```text
-Tourism Dataset
-       ↓
-Tokenizer
-       ↓
-Token IDs
-       ↓
-Token Embeddings
-       ↓
-Positional Embeddings
-       ↓
-Transformer Blocks
-       ↓
-Self Attention
-       ↓
-Multi-Head Attention
-       ↓
-Feed Forward Network
-       ↓
-Layer Normalization
-       ↓
-Residual Connections
-       ↓
-Language Model Head
-       ↓
-Next Token Prediction
-```
-
----
-
-# 📚 YatraLM Development Roadmap
-
-## Phase 1 — Tokenizer
-
-First build a simple tokenizer.
-
-Example:
-
-```text
-"Khajuraho has beautiful temples"
-
-        ↓
-
-["Khajuraho", "has", "beautiful", "temples"]
-
-        ↓
-
-[152, 43, 891, 621]
-```
-
-Learn:
-
-- Vocabulary
-- Tokens
-- Token IDs
-- Special tokens
-- Context length
-
-Later implement BPE/subword tokenization.
-
----
-
-## Phase 2 — Embeddings
-
-Implement:
-
-```text
-Token Embedding
-+
-Positional Embedding
-```
-
-Example:
-
-```text
-Token
- ↓
-Embedding
- ↓
-Vector
-```
-
-The Transformer operates on numerical vectors.
-
----
-
-## Phase 3 — Self Attention
-
-Implement self-attention from scratch.
-
-```text
-Input
- │
- ├──── Query
- ├──── Key
- └──── Value
-       │
-       ▼
-      Q × Kᵀ
-       │
-       ▼
-     Softmax
-       │
-       ▼
-Attention Weights
-       │
-       ▼
-Weighted Values
-```
-
-Core equation:
-
-```text
-Attention(Q,K,V)
-=
-softmax(QKᵀ / √dk)V
-```
-
-The team should understand this mathematically before using high-level Transformer libraries.
-
----
-
-## Phase 4 — Multi-Head Attention
-
-Instead of using one attention mechanism:
-
-```text
-Head 1
-Head 2
-Head 3
-...
-Head N
-```
-
-are used simultaneously.
-
-Then:
-
-```text
-Multiple Heads
+Model Loading (Transformers)
       ↓
-Concatenate
+Tokenization (Qwen3 tokenizer)
       ↓
-Linear Projection
+Quantization (bitsandbytes / GGUF, optional)
+      ↓
+Prompt Construction (system + retrieved context + user query)
+      ↓
+Inference (generate)
+      ↓
+Post-processing / Response Formatting
 ```
 
----
+## What the team learns
 
-## Phase 5 — Transformer Block
+- Loading and running a real pretrained transformer with `transformers`
+- Tokenizer behavior, context windows, chat templates
+- KV-cache, batching, and quantization trade-offs (4-bit/8-bit)
+- Prompt engineering and system-prompt design for a domain assistant
+- Optional: parameter-efficient fine-tuning (LoRA/QLoRA) on tourism data
+- Serving inference behind a FastAPI endpoint with proper timeouts/streaming
 
-Build:
+## Example Configuration
 
 ```text
-Input
- ↓
-Multi-Head Attention
- ↓
-Residual Connection
- ↓
-LayerNorm
- ↓
-Feed Forward Network
- ↓
-Residual Connection
- ↓
-LayerNorm
- ↓
-Output
+Model            = Qwen3-8B
+Precision        = bf16 / 4-bit quantized (hardware dependent)
+Context length    = model default (check Qwen3 docs)
+Serving          = FastAPI + Transformers `generate()` (streaming optional)
+Fine-tuning      = Optional LoRA adapter on tourism instruction data
 ```
 
----
+## Optional Fine-Tuning Data
 
-## Phase 6 — Build YatraLM
-
-Combine everything:
-
-```text
-Tokenizer
-    ↓
-Embedding
-    ↓
-Transformer Blocks
-    ↓
-LayerNorm
-    ↓
-Linear Layer
-    ↓
-Vocabulary Probabilities
-```
-
-The model predicts:
-
-```text
-"What token should come next?"
-```
-
-Example:
-
-```text
-Input:
-
-"The Taj Mahal is located in"
-
-Prediction:
-
-"Agra"
-```
-
----
-
-# 📊 Training YatraLM
-
-Create a tourism-specific dataset.
-
-Recommended data:
-
-```text
-Indian destinations
-Historical monuments
-Architecture
-Tourism information
-Travel guides
-Indian culture
-Food
-Transportation
-Local experiences
-Itinerary examples
-Tourism conversations
-```
-
-Dataset structure:
+If the team chooses to fine-tune with LoRA, the same tourism dataset structure from the original plan remains useful:
 
 ```text
 data/
@@ -808,41 +702,9 @@ data/
 
 ---
 
-# ⚠️ Important LLM Scope
-
-The team should start with a **very small model**.
-
-Example starting configuration:
-
-```text
-Vocabulary       = 10,000–20,000
-Embedding size   = 128–256
-Layers           = 4–6
-Attention heads  = 4–8
-Context length   = 256–512
-```
-
-The exact configuration can change depending on available hardware.
-
-The objective is:
-
-> **Build, train, debug and understand the complete pipeline.**
-
-Not:
-
-> **Build a GPT-scale commercial model.**
-
----
-
 # 🔎 RAG — Retrieval-Augmented Generation
 
-YatraLM should not be expected to memorize all tourism information.
-
-Instead, YatraVerse uses **RAG**.
-
-RAG allows the model to retrieve relevant information from a tourism knowledge base before generating an answer.
-
----
+Qwen3 8B should not be expected to know India-specific, up-to-date tourism details out of the box. YatraVerse uses **RAG** to ground answers in a curated tourism knowledge base.
 
 # RAG Architecture
 
@@ -855,21 +717,21 @@ Cleaning
        ↓
 Chunking
        ↓
-Embedding Model
+BGE-M3 Embedding Model
        ↓
-Vector Database
+PostgreSQL + PGVector
        ↓
 User Question
        ↓
-Question Embedding
+Question Embedding (BGE-M3)
        ↓
-Similarity Search
+Cosine Similarity Search (PGVector / HNSW index)
        ↓
 Top-K Documents
        ↓
 Context + Question
        ↓
-YatraLM
+Qwen3 8B
        ↓
 Final Answer
 ```
@@ -904,9 +766,7 @@ knowledge_base/
 
 # 🧪 RAG Development Strategy
 
-We will first build RAG **without LangChain**.
-
-This is important for learning.
+We will first build RAG **without LangChain**, for learning purposes.
 
 Implement manually:
 
@@ -914,51 +774,28 @@ Implement manually:
 1. Load documents
 2. Clean documents
 3. Split documents
-4. Generate embeddings
-5. Store embeddings
-6. Search similar vectors
+4. Generate BGE-M3 embeddings
+5. Store embeddings in PGVector
+6. Search similar vectors (cosine similarity / HNSW)
 7. Retrieve Top-K documents
 8. Create context
-9. Pass context to YatraLM
+9. Pass context to Qwen3 8B
 10. Generate answer
 ```
 
-After understanding the complete pipeline, implement the same system using:
-
-```text
-LangChain
-```
-
-This gives the team both:
-
-- Core understanding
-- Industry framework experience
+After understanding the complete pipeline, the same system can optionally be reimplemented using **LangChain** or **Spring AI** for comparison and industry-framework experience.
 
 ---
 
 # 🔢 Vector Search
 
-### Initial implementation
-
-Use:
+**PostgreSQL + PGVector is the only vector store** — there is no separate FAISS index to keep in sync, since embeddings and relational tourism metadata live in the same database and can be joined/filtered together directly in SQL.
 
 ```text
-Hugging Face Embedding Model
-+
-FAISS
+Embedding Model  = BGE-M3 (multilingual)
+Storage          = PostgreSQL (pgvector extension)
+Index            = HNSW (vector_cosine_ops)
 ```
-
-### Production-oriented implementation
-
-Use:
-
-```text
-PostgreSQL
-+
-pgvector
-```
-
-This allows tourism information and vector representations to be managed within the same database ecosystem.
 
 ---
 
@@ -967,15 +804,15 @@ This allows tourism information and vector representations to be managed within 
 ```text
 Android Camera
       ↓
-Image
+Image → MinIO
       ↓
-Vision Model
+Vision Model (PyTorch + OpenCV)
       ↓
 Monument Identification
       ↓
-Monument Database / RAG
+Monument Database / RAG (PGVector)
       ↓
-YatraLM
+Qwen3 8B
       ↓
 Historical Explanation
 ```
@@ -987,9 +824,9 @@ User takes image
        ↓
 "Sanchi Stupa"
        ↓
-Retrieve Sanchi information
+Retrieve Sanchi information (PGVector)
        ↓
-YatraLM
+Qwen3 8B
        ↓
 History + Architecture + Travel Information
 ```
@@ -998,7 +835,7 @@ History + Architecture + Travel Information
 
 # 📈 Crowd Prediction
 
-Crowd prediction is handled by a dedicated ML model.
+Crowd prediction is handled by a dedicated ML model — never by the LLM.
 
 ### Input
 
@@ -1028,13 +865,13 @@ LightGBM
 LSTM
 ```
 
-The LLM can explain the prediction but should not replace the numerical prediction model.
+Qwen3 8B can explain the prediction in natural language but should not replace the numerical prediction model.
 
 ---
 
 # 🌱 Eco Travel Score
 
-The Eco Score uses a transparent scoring system.
+The Eco Score uses a transparent, deterministic Java rule engine — not an LLM.
 
 Example:
 
@@ -1054,7 +891,7 @@ Example:
 Eco Score = 82/100
 ```
 
-The LLM can explain the score to the user.
+Qwen3 8B can explain the score to the user in plain language.
 
 ---
 
@@ -1065,7 +902,7 @@ The LLM can explain the score to the user.
 ```text
 Splash Screen
      ↓
-Login / Signup
+Login / Signup (JWT)
      ↓
 Home
      │
@@ -1093,7 +930,7 @@ YatraVerse-AI/
 ├── LICENSE
 ├── .gitignore
 ├── CONTRIBUTING.md
-├── docker-compose.yml
+├── docker-compose.yml          # postgres+pgvector, minio, backend, ai-service
 │
 ├── android-app/
 │   │
@@ -1108,6 +945,7 @@ YatraVerse-AI/
 │   │           │       ├── viewmodels/
 │   │           │       ├── repository/
 │   │           │       ├── api/
+│   │           │       ├── ws/                 # WebSocket client
 │   │           │       └── models/
 │   │           │
 │   │           ├── res/
@@ -1134,7 +972,9 @@ YatraVerse-AI/
 │   │   │   │       ├── entity/
 │   │   │   │       ├── dto/
 │   │   │   │       ├── config/
-│   │   │   │       └── security/
+│   │   │   │       ├── security/               # JWT filters, providers
+│   │   │   │       ├── websocket/               # STOMP config, handlers
+│   │   │   │       └── storage/                 # MinIO client wrapper
 │   │   │   │
 │   │   │   └── resources/
 │   │   │       └── application.properties
@@ -1154,37 +994,28 @@ YatraVerse-AI/
 │   │   ├── rag/                   # ✅ SINGLE source of truth for RAG
 │   │   │   ├── ingestion/
 │   │   │   ├── chunking/
-│   │   │   ├── embeddings/
-│   │   │   ├── retrieval/
-│   │   │   ├── vector_store/
+│   │   │   ├── embeddings/         # BGE-M3
+│   │   │   ├── retrieval/          # PGVector queries
 │   │   │   └── pipeline.py
 │   │   │
-│   │   ├── llm_service/           # wraps YatraLM for inference calls
+│   │   ├── llm_service/           # Qwen3 8B loading + inference
+│   │   │   ├── model_loader.py
+│   │   │   ├── inference.py
+│   │   │   └── prompts.py
+│   │   │
 │   │   ├── core/                  # config, logging, startup
 │   │   └── main.py
 │   │
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── llm/                            # YatraLM — built from scratch
+├── llm/                            # Optional: LoRA fine-tuning on Qwen3 8B
 │   │
-│   ├── tokenizer/
-│   │   ├── tokenizer.py
-│   │   └── vocab.json
+│   ├── finetune/
+│   │   ├── prepare_dataset.py
+│   │   ├── lora_config.py
+│   │   └── train_lora.py
 │   │
-│   ├── model/
-│   │   ├── embeddings.py
-│   │   ├── attention.py
-│   │   ├── transformer.py
-│   │   ├── model.py
-│   │   └── config.py
-│   │
-│   ├── dataset/
-│   │   ├── prepare.py
-│   │   └── dataset.py
-│   │
-│   ├── train.py
-│   ├── generate.py
 │   ├── evaluate.py
 │   └── checkpoints/
 │
@@ -1238,11 +1069,12 @@ Responsible for:
 ```text
 Android UI
 Navigation
-Login
+Login (JWT flow)
 Home
 Trip Planner UI
-Maps
+MapLibre integration
 Camera
+WebSocket client
 Community
 Profile
 ```
@@ -1255,9 +1087,11 @@ Responsible for:
 
 ```text
 Spring Boot
+Spring Security (JWT)
+Spring WebSocket
+MinIO integration
 REST APIs
 PostgreSQL
-Authentication
 Trip APIs
 Booking APIs
 Review APIs
@@ -1271,16 +1105,13 @@ Community APIs
 Responsible for:
 
 ```text
-Tokenizer
-Embeddings
-Self Attention
-Transformer
-YatraLM
-Training
-Generation
-RAG
-FAISS
-pgvector
+Qwen3 8B model loading & inference
+Quantization
+Prompt engineering
+Optional LoRA fine-tuning
+BGE-M3 embeddings
+RAG pipeline
+PGVector integration
 LLM Evaluation
 ```
 
@@ -1314,15 +1145,16 @@ main
        ├── feature/android-trip-planner
        ├── feature/android-community
        │
-       ├── feature/backend-user-api
+       ├── feature/backend-jwt-auth
+       ├── feature/backend-websocket
+       ├── feature/backend-minio
        ├── feature/backend-trip-api
        ├── feature/backend-booking
        │
-       ├── feature/llm-tokenizer
-       ├── feature/llm-attention
-       ├── feature/llm-transformer
-       ├── feature/llm-training
+       ├── feature/llm-qwen3-inference
+       ├── feature/llm-lora-finetune
        ├── feature/rag-pipeline
+       ├── feature/rag-pgvector
        │
        ├── feature/heritage-scanner
        ├── feature/crowd-prediction
@@ -1350,7 +1182,7 @@ git pull origin develop
 ## 3. Create Feature Branch
 
 ```bash
-git checkout -b feature/llm-tokenizer
+git checkout -b feature/rag-pgvector
 ```
 
 ## 4. Work on Your Module
@@ -1372,13 +1204,13 @@ git add .
 ## 7. Commit
 
 ```bash
-git commit -m "feat: add tourism tokenizer"
+git commit -m "feat: add pgvector retrieval pipeline"
 ```
 
 ## 8. Push
 
 ```bash
-git push origin feature/llm-tokenizer
+git push origin feature/rag-pgvector
 ```
 
 ## 9. Create Pull Request
@@ -1386,7 +1218,7 @@ git push origin feature/llm-tokenizer
 Create a Pull Request:
 
 ```text
-feature/llm-tokenizer
+feature/rag-pgvector
         ↓
 develop
 ```
@@ -1412,13 +1244,13 @@ fix: resolve itinerary API error
 ### Documentation
 
 ```text
-docs: update YatraLM setup
+docs: update LLM service setup
 ```
 
 ### Testing
 
 ```text
-test: add tokenizer tests
+test: add pgvector retrieval tests
 ```
 
 ### Refactoring
@@ -1440,16 +1272,16 @@ Android Studio
 JDK
 Python 3.x
 Git
-PostgreSQL
+PostgreSQL (with pgvector extension)
 Maven
+Docker (for MinIO)
 ```
 
-Optional for AI training:
+Recommended for LLM inference:
 
 ```text
-NVIDIA GPU
+NVIDIA GPU (8B model, ideally 16GB+ VRAM for bf16; less with 4-bit quantization)
 CUDA
-Docker
 ```
 
 ---
@@ -1486,6 +1318,15 @@ spring.datasource.password=YOUR_PASSWORD
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+
+jwt.secret=YOUR_JWT_SECRET
+jwt.access-token-expiry-ms=900000
+jwt.refresh-token-expiry-ms=604800000
+
+minio.endpoint=http://localhost:9000
+minio.access-key=YOUR_MINIO_ACCESS_KEY
+minio.secret-key=YOUR_MINIO_SECRET_KEY
+minio.bucket=yatraverse-media
 ```
 
 Run:
@@ -1498,6 +1339,27 @@ Backend:
 
 ```text
 http://localhost:8080
+```
+
+---
+
+# 🗄️ Run MinIO (Object Storage)
+
+```bash
+docker run -p 9000:9000 -p 9001:9001 \
+  -e "MINIO_ROOT_USER=YOUR_MINIO_ACCESS_KEY" \
+  -e "MINIO_ROOT_PASSWORD=YOUR_MINIO_SECRET_KEY" \
+  minio/minio server /data --console-address ":9001"
+```
+
+Console: `http://localhost:9001`
+
+---
+
+# 🐘 Enable PGVector
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
 ---
@@ -1533,41 +1395,41 @@ pip install -r requirements.txt
 Run:
 
 ```bash
-python app/main.py
+uvicorn app.main:app --reload --port 8000
 ```
 
 ---
 
-# 🤖 Train YatraLM
+# 🤖 Load & Serve Qwen3 8B
 
 Go to:
 
 ```bash
-cd llm
+cd ai-service/app/llm_service
 ```
 
-Prepare dataset:
+Load the model (example):
 
-```bash
-python dataset/prepare.py
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+model_name = "Qwen/Qwen3-8B"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype="auto",
+    device_map="auto",
+)
 ```
 
-Train:
+For lower VRAM usage, load with 4-bit quantization via `bitsandbytes`.
+
+Optional LoRA fine-tuning:
 
 ```bash
-python train.py
-```
-
-Generate:
-
-```bash
-python generate.py
-```
-
-Evaluate:
-
-```bash
-python evaluate.py
+cd llm/finetune
+python prepare_dataset.py
+python train_lora.py
 ```
 
 ---
@@ -1577,25 +1439,19 @@ python evaluate.py
 Prepare documents:
 
 ```bash
-python rag/ingestion/load_documents.py
+python app/rag/ingestion/load_documents.py
 ```
 
-Generate embeddings:
+Generate BGE-M3 embeddings and store in PGVector:
 
 ```bash
-python rag/embeddings/create_embeddings.py
-```
-
-Build vector index:
-
-```bash
-python rag/vector_store/build_index.py
+python app/rag/embeddings/create_embeddings.py
 ```
 
 Test retrieval:
 
 ```bash
-python rag/retrieval/test_retrieval.py
+python app/rag/retrieval/test_retrieval.py
 ```
 
 ---
@@ -1605,8 +1461,8 @@ python rag/retrieval/test_retrieval.py
 1. Open **Android Studio**
 2. Open the `android-app/` directory
 3. Allow Gradle synchronization
-4. Configure Firebase
-5. Configure the backend URL
+4. Configure MapLibre style/API endpoint
+5. Configure the backend URL and WebSocket URL
 6. Start an Android emulator or connect a physical device
 7. Click **Run**
 
@@ -1614,6 +1470,7 @@ For an Android Emulator, a local Spring Boot server usually uses:
 
 ```text
 http://10.0.2.2:8080
+ws://10.0.2.2:8080/ws
 ```
 
 instead of:
@@ -1635,17 +1492,25 @@ POSTGRES_URL=
 POSTGRES_USERNAME=
 POSTGRES_PASSWORD=
 
-FIREBASE_PROJECT_ID=
-FIREBASE_STORAGE_BUCKET=
+JWT_SECRET=
+JWT_ACCESS_EXPIRY_MS=
+JWT_REFRESH_EXPIRY_MS=
 
-MAPS_API_KEY=
+MINIO_ENDPOINT=
+MINIO_ACCESS_KEY=
+MINIO_SECRET_KEY=
+MINIO_BUCKET=
+
+HUGGINGFACE_TOKEN=          # if required for gated model access
+
+OSRM_ROUTING_URL=
+NOMINATIM_URL=
 ```
 
 Sensitive files should not be committed:
 
 ```text
 .env
-google-services.json
 service-account.json
 API keys
 private keys
@@ -1653,30 +1518,6 @@ database passwords
 ```
 
 Add them to `.gitignore`.
-
----
-
-# 🚫 No External LLM API for YatraLM
-
-The core educational LLM will **not depend on OpenAI or Gemini API keys**.
-
-The initial YatraLM implementation will use:
-
-```text
-Python
-+
-PyTorch
-+
-Custom Tokenizer
-+
-Custom Transformer
-+
-Tourism Dataset
-```
-
-External services may still be used for infrastructure features such as maps, weather, authentication, or other APIs depending on the final project requirements.
-
-The goal is to understand and implement the LLM ourselves.
 
 ---
 
@@ -1689,6 +1530,7 @@ Unit Tests
 UI Tests
 Navigation Tests
 API Tests
+WebSocket Tests
 ```
 
 ## Spring Boot
@@ -1697,19 +1539,19 @@ API Tests
 Controller Tests
 Service Tests
 Repository Tests
+Security/JWT Filter Tests
 Integration Tests
 ```
 
-## YatraLM
+## LLM Service
 
 Test:
 
 ```text
-Tokenizer
-Attention
-Transformer
-Training
-Generation
+Model loading
+Tokenization
+Prompt construction
+Inference output shape/latency
 ```
 
 ## RAG
@@ -1747,21 +1589,19 @@ RMSE
 
 # 🛡️ Security
 
-YatraVerse should implement:
+YatraVerse implements:
 
-- Authentication
-- Authorization
+- JWT-based authentication and authorization (Spring Security)
 - Input validation
-- Secure password handling
-- JWT/security controls
+- BCrypt password hashing
 - HTTPS in production
 - Database access control
 - API rate limiting
-- Firebase security rules
-- Secure file upload
+- MinIO bucket policies / signed URLs for secure file upload
+- WebSocket connection authentication (JWT on handshake)
 - No credentials in GitHub
 
-Emergency functionality should not depend on an AI-generated response.
+Emergency functionality does not depend on an AI-generated response.
 
 ---
 
@@ -1773,16 +1613,16 @@ Emergency functionality should not depend on an AI-generated response.
 Repository
 Android Project
 Spring Boot
-PostgreSQL
-Firebase
+PostgreSQL + PGVector
+MinIO
 Python AI Environment
 ```
 
-## Phase 2 — Basic Application
+## Phase 2 — Auth & Basic Application
 
 ```text
-Login
-Signup
+Spring Security + JWT
+Signup / Login
 Home
 Profile
 Navigation
@@ -1799,24 +1639,16 @@ Booking API
 Review API
 ```
 
-## Phase 4 — YatraLM
+## Phase 4 — LLM Service
 
 ```text
-Tokenizer
+Load Qwen3 8B (Transformers)
      ↓
-Embeddings
+Tokenization / Prompting
      ↓
-Self Attention
+Inference Endpoint (FastAPI)
      ↓
-Multi-Head Attention
-     ↓
-Transformer Block
-     ↓
-YatraLM
-     ↓
-Training
-     ↓
-Generation
+Optional: LoRA Fine-tuning
 ```
 
 ## Phase 5 — RAG
@@ -1826,13 +1658,13 @@ Tourism Documents
      ↓
 Chunking
      ↓
-Embeddings
+BGE-M3 Embeddings
      ↓
-FAISS
+PGVector
      ↓
 Retriever
      ↓
-YatraLM
+Qwen3 8B
 ```
 
 ## Phase 6 — AI Features
@@ -1845,7 +1677,15 @@ AI Trip Planner
 Smart Itinerary
 ```
 
-## Phase 7 — Community
+## Phase 7 — Real-Time & Storage
+
+```text
+WebSocket notifications
+MinIO media pipeline
+Emergency broadcast
+```
+
+## Phase 8 — Community
 
 ```text
 Posts
@@ -1855,7 +1695,7 @@ Reviews
 Photos
 ```
 
-## Phase 8 — Marketplace
+## Phase 9 — Marketplace
 
 ```text
 Guides
@@ -1865,7 +1705,7 @@ Experiences
 Bookings
 ```
 
-## Phase 9 — Analytics
+## Phase 10 — Analytics
 
 ```text
 Visitor Trends
@@ -1875,36 +1715,38 @@ Feedback
 Crowd Analytics
 ```
 
-## Phase 10 — Deployment
+## Phase 11 — Deployment
 
 ```text
 Docker
      ↓
-AI Service
+AI Service (Qwen3 8B)
      ↓
 Spring Boot
      ↓
-PostgreSQL
+PostgreSQL + PGVector
+     ↓
+MinIO
      ↓
 Android
 ```
 
 ---
 
-# 🏆 YatraLM Milestones
+# 🏆 Milestones
 
-- [ ] Tokenizer works
-- [ ] Embeddings work
-- [ ] Self-attention works
-- [ ] Multi-head attention works
-- [ ] Transformer block works
-- [ ] YatraLM forward pass works
-- [ ] Model trains successfully
-- [ ] Model generates text
-- [ ] Tourism-domain training
-- [ ] RAG integration
-- [ ] Spring Boot integration
-- [ ] Android integration
+- [ ] JWT auth working end-to-end
+- [ ] PGVector extension enabled and indexed
+- [ ] Qwen3 8B loads and runs inference locally
+- [ ] RAG retrieval returns relevant chunks
+- [ ] RAG + Qwen3 8B produces grounded answers
+- [ ] Optional LoRA fine-tune improves domain responses
+- [ ] MinIO upload/download working
+- [ ] WebSocket real-time notifications working
+- [ ] Heritage Scanner end-to-end
+- [ ] Crowd prediction model trained
+- [ ] Eco score rule engine complete
+- [ ] Android integration complete
 
 ---
 
@@ -1913,7 +1755,7 @@ Android
 Future versions of YatraVerse AI can include:
 
 ```text
-Multilingual YatraLM
+Multilingual RAG (Hindi/regional languages via BGE-M3)
         ↓
 Voice-Based Travel Assistant
         ↓
@@ -1923,28 +1765,29 @@ Text-to-Speech
         ↓
 AI Travel Agent
         ↓
-Tool Calling
+Tool Calling (Qwen3 function calling)
         ↓
 Real-Time Itinerary Adaptation
         ↓
 Personalized Recommendations
         ↓
-On-Device AI
+On-Device / Quantized Local Inference
 ```
 
 Other possibilities:
 
-- Hindi and regional-language tourism
+- Hindi and regional-language tourism support
 - Voice-based trip planning
-- Offline tourism assistant
-- AI travel agent
+- Offline tourism assistant (quantized model on-device)
+- AI travel agent with tool calling
 - AR heritage exploration
-- Real-time route optimization
+- Real-time route optimization (self-hosted OSRM)
 - Advanced crowd forecasting
 - Carbon emission estimation
 - Personalized recommendation engine
 - Local business recommendation
 - Tourism demand forecasting
+- Optional managed push notifications layered on top of WebSocket
 
 ---
 
@@ -1957,14 +1800,18 @@ Other possibilities:
           │               │                │
           ▼               ▼                ▼
        Android        Spring Boot       AI Service
+          │           (Security/WS)     (FastAPI)
           │               │                │
           │               ▼                │
-          │           PostgreSQL           │
+          │       PostgreSQL + PGVector     │
+          │               │                │
+          │               ▼                │
+          │            MinIO                │
           │                                │
           │               ┌────────────────┤
           │               │                │
           │               ▼                ▼
-          │            YatraLM             ML
+          │           Qwen3 8B             ML
           │               │                │
           │               ▼                ├── Crowd
           │              RAG                └── Eco
@@ -1972,39 +1819,33 @@ Other possibilities:
           │               ▼
           │       Tourism Knowledge
           │
-          └──────── Firebase / Maps
+          └──────── OpenStreetMap / MapLibre
 ```
 
 ---
 
 # 🎓 Learning Objective
 
-The most important goal of this project is to understand the complete modern AI development pipeline:
+The most important goal of this project is to understand the complete modern AI-integrated application pipeline:
 
 ```text
 DATA
  ↓
-TOKENIZATION
+CHUNKING & EMBEDDINGS (BGE-M3)
  ↓
-EMBEDDINGS
+VECTOR STORAGE (PGVector)
  ↓
-TRANSFORMER
+RETRIEVAL (RAG)
  ↓
-TRAINING
+LLM INFERENCE (Qwen3 8B / Transformers)
  ↓
-YatraLM
+AI SERVICE (FastAPI)
  ↓
-VECTOR EMBEDDINGS
+SECURE BACKEND (Spring Boot + JWT + WebSocket)
  ↓
-VECTOR SEARCH
+RELATIONAL DATABASE (PostgreSQL)
  ↓
-RAG
- ↓
-AI SERVICE
- ↓
-SPRING BOOT
- ↓
-POSTGRESQL
+OBJECT STORAGE (MinIO)
  ↓
 ANDROID APPLICATION
 ```
@@ -2012,16 +1853,18 @@ ANDROID APPLICATION
 This allows the team to gain practical experience in:
 
 - Android Development
-- Backend Development
-- REST API Development
-- Database Engineering
+- Backend Development & Security
+- REST + WebSocket API Development
+- Database Engineering (relational + vector)
 - Machine Learning
 - Computer Vision
 - Natural Language Processing
-- Transformer Architecture
-- LLM Engineering
+- Pretrained LLM Loading & Inference
+- Prompt Engineering
+- Optional LoRA Fine-Tuning
 - RAG
 - Vector Databases
+- Object Storage
 - AI Evaluation
 - Model Deployment
 - Git/GitHub Collaboration
@@ -2034,10 +1877,10 @@ This allows the team to gain practical experience in:
 🚧 Under Development
 ```
 
-YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot, PostgreSQL, Firebase, Machine Learning, Computer Vision, a custom tourism-domain LLM, and Retrieval-Augmented Generation.
+YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot (Security + WebSocket), PostgreSQL + PGVector, MinIO, OpenStreetMap/MapLibre, Machine Learning, Computer Vision, Qwen3 8B, and Retrieval-Augmented Generation.
 
 ---
 
 # ⭐ Final Goal
 
-> **YatraVerse AI aims to become an intelligent, personalized, safe, sustainable, and culturally aware tourism platform while providing the development team with hands-on experience in modern software engineering and AI/LLM engineering.**
+> **YatraVerse AI aims to become an intelligent, personalized, safe, sustainable, and culturally aware tourism platform while providing the development team with hands-on experience in modern software engineering and applied LLM/RAG engineering — built on a self-hosted, vendor-independent stack.**
