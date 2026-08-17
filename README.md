@@ -1093,6 +1093,7 @@ YatraVerse-AI/
 ├── LICENSE
 ├── .gitignore
 ├── CONTRIBUTING.md
+├── docker-compose.yml
 │
 ├── android-app/
 │   │
@@ -1126,6 +1127,15 @@ YatraVerse-AI/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/
+│   │   │   │   └── com/yatraverse/backend/
+│   │   │   │       ├── controller/
+│   │   │   │       ├── service/
+│   │   │   │       ├── repository/
+│   │   │   │       ├── entity/
+│   │   │   │       ├── dto/
+│   │   │   │       ├── config/
+│   │   │   │       └── security/
+│   │   │   │
 │   │   │   └── resources/
 │   │   │       └── application.properties
 │   │   │
@@ -1136,17 +1146,27 @@ YatraVerse-AI/
 ├── ai-service/
 │   │
 │   ├── app/
-│   │   ├── api/
-│   │   ├── models/
-│   │   ├── rag/
-│   │   ├── embeddings/
-│   │   ├── vision/
+│   │   ├── api/                  # FastAPI route handlers
+│   │   ├── schemas/               # Pydantic request/response models
+│   │   ├── models/                # DB/data models used by ai-service
+│   │   ├── vision/                # Heritage Scanner (monument recognition)
+│   │   │
+│   │   ├── rag/                   # ✅ SINGLE source of truth for RAG
+│   │   │   ├── ingestion/
+│   │   │   ├── chunking/
+│   │   │   ├── embeddings/
+│   │   │   ├── retrieval/
+│   │   │   ├── vector_store/
+│   │   │   └── pipeline.py
+│   │   │
+│   │   ├── llm_service/           # wraps YatraLM for inference calls
+│   │   ├── core/                  # config, logging, startup
 │   │   └── main.py
 │   │
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-├── llm/
+├── llm/                            # YatraLM — built from scratch
 │   │
 │   ├── tokenizer/
 │   │   ├── tokenizer.py
@@ -1168,26 +1188,23 @@ YatraVerse-AI/
 │   ├── evaluate.py
 │   └── checkpoints/
 │
-├── rag/
-│   │
-│   ├── ingestion/
-│   ├── chunking/
-│   ├── embeddings/
-│   ├── retrieval/
-│   ├── vector_store/
-│   └── pipeline.py
-│
 ├── ml/
 │   │
 │   ├── crowd_prediction/
+│   │   ├── train.py
+│   │   ├── model.py
+│   │   └── evaluate.py
+│   │
 │   └── eco_score/
+│       ├── rules.py
+│       └── calculate.py
 │
 ├── data/
 │   ├── raw/
 │   ├── processed/
 │   └── instruction/
 │
-├── knowledge_base/
+├── knowledge_base/                 # RAG source documents
 │   ├── monuments/
 │   ├── destinations/
 │   ├── culture/
