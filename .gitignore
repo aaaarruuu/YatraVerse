@@ -1,0 +1,65 @@
+﻿# Secrets / environment
+.env
+.env.*
+!.env.example
+service-account.json
+*.pem
+*.key
+application-local.properties
+application-secrets.properties
+
+# Android
+android-app/.gradle/
+android-app/build/
+android-app/app/build/
+android-app/local.properties
+android-app/*.iml
+android-app/.idea/
+android-app/captures/
+android-app/.externalNativeBuild/
+android-app/.cxx/
+*.apk
+*.aab
+
+# Java / Maven (backend)
+backend/target/
+backend/*.log
+*.class
+*.jar
+!gradle-wrapper.jar
+
+# Python (ai-service, ml, llm)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+venv/
+.venv/
+env/
+*.ipynb_checkpoints
+
+# Model weights / large artifacts
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+llm/checkpoints/*
+!llm/checkpoints/.gitkeep
+
+# Data
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+docker-compose.override.yml
