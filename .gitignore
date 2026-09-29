@@ -63,3 +63,6 @@ Thumbs.db
 # Docker
 *.pid
 docker-compose.override.yml
+
+# Local H2 / backend data
+backend/data/

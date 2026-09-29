@@ -1,0 +1,19 @@
+package com.yatraverse.data.api
+
+import com.yatraverse.data.models.Destination
+import com.yatraverse.data.models.LoginRequest
+import com.yatraverse.data.models.LoginResponse
+import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+
+interface ApiService {
+
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    @GET("api/destinations")
+    suspend fun getDestinations(): Response<List<Destination>>
+
+}

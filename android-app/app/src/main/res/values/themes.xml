@@ -1,0 +1,7 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.YatraVerse" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/yatra_primary</item>
+        <item name="colorPrimaryDark">@color/yatra_primary_dark</item>
+        <item name="colorAccent">@color/yatra_primary</item>
+    </style>
+</resources>

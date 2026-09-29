@@ -47,6 +47,14 @@ Example: feat: add JWT refresh token rotation
 See the "Team Collaboration" section of README.md for the four module
 areas (Android, Backend, LLM+RAG, ML/AI) and who owns each.
 
+## Free-Tier Rules
+
+The project must stay free to run and deploy.
+
+- Read every host-specific value (DB URL, storage endpoint, keys, AI service URL) from environment variables. Never hard-code them.
+- Add any new variable to `.env.example` in the same commit.
+- Never commit real secrets.
+
 ## Progress Tracking
 
 This project maintains PROJECT_PROGRESS.md at the repo root. Update it
