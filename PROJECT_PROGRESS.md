@@ -2,97 +2,84 @@
 
 ## Current Status
 
-Repo scaffolding complete. No application code exists yet in any module
-(Android, backend, ai-service, ml, llm). This step only created the folder
-structure and root-level project files documented in README.md.
+Repo scaffolding is complete and the Android app runs on an emulator.
+The backend, ai-service, ml and llm modules still have no code.
+
+The whole project is being kept free to run and deploy (see "Free
+Deployment Plan" below). The tech stack itself is unchanged.
 
 ## Current Step
 
-Step 1: Repository scaffolding (this step).
+Step 2: Verify local infrastructure, then bootstrap the Spring Boot backend.
+
+## Completed
+
+- Repository scaffolding on branch feature/repo-scaffolding (committed locally).
+- docker-compose.yml with postgres (pgvector) and minio, plus a helper
+  that creates the media bucket.
+- Android app (package com.yatraverse) installs and launches on a
+  Pixel 5 emulator, API 34 (Google APIs).
+- Free-deployment plan written into README.md.
+
+## Not Done Yet
+
+- feature/repo-scaffolding is not pushed to GitHub.
+- `docker compose up` has not been confirmed working.
+- Android project location in the repo is unconfirmed (android-app/ was
+  still empty in the last scaffolding commit).
+- Spring Boot backend, FastAPI AI service, database schema, JWT auth.
 
 ## Existing Project Structure
 
 YatraVerse/
-  README.md              (pre-existing)
-  WHY_TO_USE_THIS_STACK  (pre-existing)
-  LICENSE                (new)
-  CONTRIBUTING.md        (new)
-  .gitignore             (new)
-  .env.example           (new)
-  docker-compose.yml     (new)
-  PROJECT_PROGRESS.md    (new, this file)
-  android-app/           (new, empty - .gitkeep only)
-  backend/               (new, empty - .gitkeep only)
-  ai-service/             (new, empty - .gitkeep only)
-  llm/checkpoints/       (new, empty - .gitkeep only)
-  ml/                    (new, empty - .gitkeep only)
-  data/raw/              (new, empty - .gitkeep only)
-  data/processed/        (new, empty - .gitkeep only)
-  data/instruction/      (new, empty - .gitkeep only)
-  knowledge_base/        (new, empty - .gitkeep only)
-  docs/                  (new, empty - .gitkeep only)
-  tests/                 (new, empty - .gitkeep only)
+  README.md
+  WHY_TO_USE_THIS_STACK
+  LICENSE
+  CONTRIBUTING.md
+  .gitignore
+  .env.example
+  docker-compose.yml
+  PROJECT_PROGRESS.md
+  android-app/            (confirm the Android project is here)
+  backend/                (empty - .gitkeep only)
+  ai-service/             (empty - .gitkeep only)
+  llm/checkpoints/        (empty - .gitkeep only)
+  ml/                     (empty - .gitkeep only)
+  data/raw|processed|instruction/   (empty - .gitkeep only)
+  knowledge_base/         (empty - .gitkeep only)
+  docs/                   (empty - .gitkeep only)
+  tests/                  (empty - .gitkeep only)
 
-## Files Created/Modified
+## Free Deployment Plan
 
-| File | Action |
-|------|--------|
-| .gitignore | Created |
-| LICENSE | Created (MIT) |
-| CONTRIBUTING.md | Created |
-| docker-compose.yml | Created |
-| .env.example | Created |
-| PROJECT_PROGRESS.md | Created |
-| 9 top-level module folders | Created (empty, .gitkeep only) |
+| Piece | Local | Free deploy |
+|-------|-------|-------------|
+| Postgres + pgvector | docker compose | Neon |
+| Object storage | MinIO | Cloudflare R2 |
+| Spring Boot backend | mvn spring-boot:run | Render (free web service) |
+| Android app | Emulator | APK via GitHub Releases |
+| AI service (Qwen3 8B, BGE-M3) | Own machine | Laptop + tunnel, or free notebook GPU (demo only) |
 
-README.md and WHY_TO_USE_THIS_STACK were NOT modified.
+All host-specific values come from environment variables, so switching
+host is a config change, not a code change. Verify free-tier limits
+before relying on them; they change often.
 
-## What Each File Does
+## Next Steps (in order)
 
-- .gitignore - excludes secrets, build artifacts, model weights, venvs,
-  and large data files from every module.
-- LICENSE - MIT license for the project.
-- CONTRIBUTING.md - condensed Git branch/commit workflow reference.
-- docker-compose.yml - local dev stack. postgres (with pgvector) and
-  minio are runnable now; backend and ai-service services are
-  commented out until their Dockerfiles exist.
-- .env.example - template for required environment variables; copy to
-  .env (which is gitignored) and fill in real values.
-- Top-level folders - empty skeletons matching the "Complete Project
-  Folder Structure" section of README.md, holding .gitkeep so Git
-  tracks them before real code exists inside.
-
-## Last Completed Task
-
-Created root-level project files and the 9 top-level module folders on
-branch feature/repo-scaffolding. Committed locally in 2 commits so far.
-
-## Where I Stopped
-
-Scaffolding is complete and committed to feature/repo-scaffolding but
-not yet pushed to GitHub.
-
-No module (Android/backend/ai-service/ml/llm) has any code inside it yet -
-only .gitkeep placeholders.
-
-## Next Steps
-
-Candidates for Step 2 (pick one):
-
-1. Backend bootstrap - minimal Spring Boot project (pom.xml,
-   application.properties, main application class) so backend/ can
-   actually run.
-2. AI service bootstrap - minimal FastAPI project (requirements.txt,
-   app/main.py) so ai-service/ can actually run.
-3. Android bootstrap - minimal Android Studio project skeleton.
-4. Database schema - first Postgres migration enabling pgvector and
-   creating the users/knowledge_chunks tables.
+1. Push feature/repo-scaffolding to GitHub.
+2. Run `docker compose up -d` and confirm postgres and minio work.
+3. Backend bootstrap: minimal Spring Boot, config from env variables.
+4. Database schema: users table, pgvector enabled.
+5. Create a free Neon project and confirm the schema works there.
+6. JWT auth endpoints (signup, login, refresh).
+7. Android login/signup screens.
+8. First free deploy: backend on Render + Neon.
+9. Later: R2 replaces MinIO when deployed; AI service via laptop tunnel.
 
 ## How to Continue
 
 1. git fetch origin
-2. git checkout feature/repo-scaffolding (after it is pushed)
-3. Review README.md -> "Complete Project Folder Structure" to confirm
-   nothing here has drifted from the documented plan.
-4. Pick one item from "Next Steps" above and tell Claude which one - it
-   will explain the step before writing any code, per project instructions.
+2. git checkout feature/repo-scaffolding
+3. Read README.md ("Free Deployment" section) and this file.
+4. Do the next unfinished item above; Claude explains each step before
+   writing code.

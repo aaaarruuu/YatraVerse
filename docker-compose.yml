@@ -13,6 +13,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-yatraverse} -d yatraverse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio:latest
@@ -27,6 +32,22 @@ services:
       - "9001:9001"
     volumes:
       - minio-data:/data
+
+  # One-shot helper: creates the media bucket so uploads work immediately.
+  minio-init:
+    image: minio/mc:latest
+    container_name: yatraverse-minio-init
+    depends_on:
+      - minio
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-yatraverse}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-yatraverse123}
+      MINIO_BUCKET: ${MINIO_BUCKET:-yatraverse-media}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY; do sleep 2; done &&
+      mc mb --ignore-existing local/$$MINIO_BUCKET
+      "
 
   # backend:
   #   build: ./backend

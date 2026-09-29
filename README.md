@@ -2,6 +2,8 @@
 
 > **AI-Powered Smart Tourism Ecosystem**
 
+> 💸 **Zero-cost by design:** everything runs locally with `docker compose` and can be deployed on free tiers. See [Free Deployment](#-free-deployment).
+
 YatraVerse AI is an AI-powered smart tourism ecosystem that combines **personalized trip planning, intelligent itinerary generation, heritage exploration, tourist safety, sustainable travel, local experiences, community interaction, and tourism analytics** into a single Android application.
 
 The project is also designed as a **learning-focused AI engineering project**, where the team builds a full RAG (Retrieval-Augmented Generation) pipeline on top of an open-weight LLM (**Qwen3 8B**), along with embeddings, vector search, and supporting AI/ML services — with a strong emphasis on understanding how each layer of the stack actually works rather than relying on managed/vendor services wherever a learning opportunity exists.
@@ -32,6 +34,7 @@ The project is also designed as a **learning-focused AI engineering project**, w
 - [Installation](#-installation)
 - [Running the Project](#-running-the-project)
 - [Environment Variables](#-environment-variables)
+- [Free Deployment](#-free-deployment)
 - [Development Roadmap](#-development-roadmap)
 - [Testing](#-testing)
 - [Security](#-security)
@@ -110,6 +113,7 @@ The stack intentionally favors self-hosted, learnable components over fully mana
 | LLM | **Qwen3 8B (Transformers/PyTorch)** | Ollama-only wrapper | Learn actual model loading, tokenization, and inference, not just calling a CLI |
 | Embeddings | **BGE-M3 (multilingual)** | Basic sentence-transformers model | Stronger retrieval quality and multilingual tourism support (Hindi/regional languages) |
 | AI Framework | **Spring AI (selectively)** | Everything hand-rolled | Use it where it removes boilerplate, but understand the underlying HTTP/inference calls first |
+| Hosting | **Local Docker + free tiers** | Paid cloud | The whole project must run and deploy at $0; all hosts are configured through environment variables, so they are swappable without code changes |
 
 > Firebase is no longer part of the core stack. It may optionally be reintroduced later for push notifications on top of WebSocket if offline delivery is required, but it is not a dependency for MVP.
 
@@ -555,6 +559,8 @@ CREATE TABLE knowledge_chunks (
 CREATE INDEX ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
 ```
 
+> **Free deployment:** local development uses the `pgvector/pgvector:pg16` container from `docker-compose.yml`. When deployed, the same schema runs on **Neon** (free Postgres with `pgvector`). Only `POSTGRES_URL`, username and password change.
+
 ---
 
 # 🔐 Authentication
@@ -624,6 +630,8 @@ Heritage Scanner Images
 ```
 
 Backend interacts with MinIO via the AWS S3 SDK (Java) / `boto3` (Python), so the same code patterns transfer directly to any real S3-compatible provider in production.
+
+> **Free deployment:** MinIO is used for local development. When deployed, the same code points at **Cloudflare R2** (S3-compatible) by changing only `MINIO_ENDPOINT`, the keys and the bucket. Enable path-style access in the S3 client so both work.
 
 ---
 
@@ -1274,7 +1282,7 @@ Python 3.x
 Git
 PostgreSQL (with pgvector extension)
 Maven
-Docker (for MinIO)
+Docker (Postgres + pgvector and MinIO via docker compose)
 ```
 
 Recommended for LLM inference:
@@ -1295,6 +1303,24 @@ cd YatraVerse-AI
 
 ---
 
+# 🐳 Start Local Infrastructure (Postgres + pgvector + MinIO)
+
+```bash
+cp .env.example .env        # then fill in the values
+docker compose up -d
+docker compose ps           # postgres and minio should be running
+```
+
+```text
+PostgreSQL + pgvector  ->  localhost:5432
+MinIO API              ->  http://localhost:9000
+MinIO console          ->  http://localhost:9001
+```
+
+Stop with `docker compose down` (add `-v` to also delete the data volumes).
+
+---
+
 # ☕ Run Spring Boot Backend
 
 Go to:
@@ -1303,7 +1329,7 @@ Go to:
 cd backend
 ```
 
-Configure PostgreSQL in:
+Configuration is read from environment variables (with local defaults), so the same code runs locally and on free hosts. Configure in:
 
 ```text
 src/main/resources/application.properties
@@ -1312,21 +1338,23 @@ src/main/resources/application.properties
 Example:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/yatraverse
-spring.datasource.username=YOUR_USERNAME
-spring.datasource.password=YOUR_PASSWORD
+server.port=${PORT:8080}
+
+spring.datasource.url=${POSTGRES_URL:jdbc:postgresql://localhost:5432/yatraverse}
+spring.datasource.username=${POSTGRES_USERNAME:yatraverse}
+spring.datasource.password=${POSTGRES_PASSWORD:yatraverse}
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 
-jwt.secret=YOUR_JWT_SECRET
-jwt.access-token-expiry-ms=900000
-jwt.refresh-token-expiry-ms=604800000
+jwt.secret=${JWT_SECRET}
+jwt.access-token-expiry-ms=${JWT_ACCESS_EXPIRY_MS:900000}
+jwt.refresh-token-expiry-ms=${JWT_REFRESH_EXPIRY_MS:604800000}
 
-minio.endpoint=http://localhost:9000
-minio.access-key=YOUR_MINIO_ACCESS_KEY
-minio.secret-key=YOUR_MINIO_SECRET_KEY
-minio.bucket=yatraverse-media
+minio.endpoint=${MINIO_ENDPOINT:http://localhost:9000}
+minio.access-key=${MINIO_ACCESS_KEY:yatraverse}
+minio.secret-key=${MINIO_SECRET_KEY:yatraverse123}
+minio.bucket=${MINIO_BUCKET:yatraverse-media}
 ```
 
 Run:
@@ -1344,6 +1372,8 @@ http://localhost:8080
 ---
 
 # 🗄️ Run MinIO (Object Storage)
+
+Included in `docker compose up -d` above. To run it on its own:
 
 ```bash
 docker run -p 9000:9000 -p 9001:9001 \
@@ -1505,7 +1535,13 @@ HUGGINGFACE_TOKEN=          # if required for gated model access
 
 OSRM_ROUTING_URL=
 NOMINATIM_URL=
+
+AI_SERVICE_URL=http://localhost:8000    # where the backend reaches the FastAPI service
+CORS_ALLOWED_ORIGINS=                   # set when deployed
 ```
+
+> The `MINIO_*` variables hold values for **any S3-compatible storage** (MinIO locally, Cloudflare R2 when deployed).
+> For Neon, `POSTGRES_URL` must end with `?sslmode=require`.
 
 Sensitive files should not be committed:
 
@@ -1518,6 +1554,35 @@ database passwords
 ```
 
 Add them to `.gitignore`.
+
+---
+
+# 💸 Free Deployment
+
+The stack does not change. Only **where each piece runs** changes, and this is done purely through environment variables.
+
+| Piece | Local development | Free deployment |
+|---|---|---|
+| PostgreSQL + pgvector | `docker compose` | **Neon** free plan (pgvector supported) |
+| Object storage | MinIO (`docker compose`) | **Cloudflare R2** (S3-compatible) |
+| Spring Boot backend | `mvn spring-boot:run` | **Render** free web service (Docker) |
+| Android app | Emulator / phone | APK shared via **GitHub Releases** |
+| AI service (FastAPI + Qwen3 8B + BGE-M3) | Your machine | See below |
+
+### Notes and limits
+
+- Backend on Render's free plan sleeps after idle time, so the first request can take about a minute. Cap the JVM memory (for example `JAVA_TOOL_OPTIONS=-Xmx350m`).
+- Do not use Render's free Postgres for long-term data, since it expires. Use Neon.
+- Free-tier limits change often. **Verify current limits before relying on them.**
+
+### The AI service
+
+Qwen3 8B and BGE-M3 are too large for any free web container. Options that keep the same models:
+
+1. Run the AI service on your own machine (4-bit quantized) and expose it to the deployed backend through a free tunnel. It is online only while your machine is on, which is fine for demos and viva.
+2. Run it on a free notebook GPU (Colab / Kaggle) during demo sessions.
+
+The backend must treat the AI service as optional: if `AI_SERVICE_URL` is unreachable, AI endpoints return a clear "AI service offline" response and the rest of the app keeps working.
 
 ---
 
@@ -1718,17 +1783,17 @@ Crowd Analytics
 ## Phase 11 — Deployment
 
 ```text
-Docker
+Docker (local, docker compose)
      ↓
-AI Service (Qwen3 8B)
+Spring Boot -> Render (free)
      ↓
-Spring Boot
+PostgreSQL + PGVector -> Neon (free)
      ↓
-PostgreSQL + PGVector
+MinIO -> Cloudflare R2 (free)
      ↓
-MinIO
+AI Service (Qwen3 8B) -> laptop + tunnel / free notebook GPU (demo)
      ↓
-Android
+Android -> APK via GitHub Releases
 ```
 
 ---
@@ -1747,6 +1812,7 @@ Android
 - [ ] Crowd prediction model trained
 - [ ] Eco score rule engine complete
 - [ ] Android integration complete
+- [ ] Free deployment working (Render + Neon + R2)
 
 ---
 
@@ -1875,6 +1941,10 @@ This allows the team to gain practical experience in:
 
 ```text
 🚧 Under Development
+
+Done:   repo scaffolding, docker-compose (Postgres+pgvector, MinIO),
+        Android app runs on emulator (Pixel 5, API 34)
+Next:   verify docker compose, Spring Boot bootstrap, users table, JWT auth
 ```
 
 YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot (Security + WebSocket), PostgreSQL + PGVector, MinIO, OpenStreetMap/MapLibre, Machine Learning, Computer Vision, Qwen3 8B, and Retrieval-Augmented Generation.
