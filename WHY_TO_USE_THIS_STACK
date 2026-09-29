@@ -18,3 +18,4 @@
 | LLM               | **Qwen3 8B + Transformers/PyTorch**       | Ollama                      | Learn actual model loading/inference instead of only calling Ollama        |
 | Embeddings        | **BGE-M3 / multilingual embedding model** | Basic sentence-transformers | Better RAG learning and multilingual tourism use cases                     |
 | AI framework      | **Spring AI selectively**                 | Everything manually         | Use it where useful, but understand the underlying APIs first              |
+| Hosting           | **Local Docker + free tiers**             | Paid cloud                  | Project must run and deploy at $0; env-var config keeps hosts swappable    |
