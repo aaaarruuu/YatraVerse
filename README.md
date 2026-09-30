@@ -498,16 +498,16 @@ Spring Boot is responsible for the main business logic, authentication, and REST
 ### Technologies
 
 ```text
-Java
-Spring Boot
+Java 25
+Spring Boot 4.1.1
 Spring Web
-Spring Data JPA
-Spring Security (JWT)
-Spring WebSocket
+Spring Data JPA (Hibernate 7)
+Spring Security (JWT)          # implemented
 PostgreSQL Driver
-Maven
+Maven (mvnw wrapper)
 REST APIs
-Spring AI (selective use)
+Spring WebSocket               # planned
+Spring AI (selective use)      # planned
 ```
 
 ---
@@ -559,7 +559,9 @@ CREATE TABLE knowledge_chunks (
 CREATE INDEX ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
 ```
 
-> **Free deployment:** local development uses the `pgvector/pgvector:pg16` container from `docker-compose.yml`. When deployed, the same schema runs on **Neon** (free Postgres with `pgvector`). Only `POSTGRES_URL`, username and password change.
+> **Current state:** the backend creates its tables (`users`, `destinations`) through Hibernate (`ddl-auto=update`). Locally it runs against PostgreSQL on `localhost:5432`. The deployed backend uses a **Render PostgreSQL 18** database (`yatraverse-db`, Singapore) through its *Internal Database URL*.
+>
+> **Planned:** Render's free Postgres is temporary, so the data will move to **Neon** (free Postgres with `pgvector`) before the Render database expires. `pgvector` is not used yet. Only `POSTGRES_URL`, username and password change when switching hosts.
 
 ---
 
@@ -585,6 +587,8 @@ Subsequent requests → Authorization: Bearer <token>
       ↓
 JWT Filter validates + sets SecurityContext
 ```
+
+> **Status:** signup and login endpoints, `JwtUtil`, `JwtAuthFilter` and `SecurityConfig` are implemented in the backend, and login and signup now work end-to-end from the Android app against the deployed backend. Refresh tokens, roles and `@PreAuthorize` are still planned. The current token lifetime is set with `JWT_EXPIRATION` (86400000 ms = 24 hours).
 
 ### What the team learns
 
@@ -935,61 +939,55 @@ Home
 YatraVerse-AI/
 │
 ├── README.md
+├── PROJECT_PROGRESS.md
+├── WHY_TO_USE_THIS_STACK
 ├── LICENSE
 ├── .gitignore
 ├── CONTRIBUTING.md
 ├── docker-compose.yml          # postgres+pgvector, minio, backend, ai-service
 │
-├── android-app/
-│   │
+├── android-app/                          # ✅ login + signup + explore list, connected to the live backend
 │   ├── app/
-│   │   └── src/
-│   │       └── main/
-│   │           ├── java/
-│   │           │   └── com/yatraverse/
-│   │           │       ├── ui/
-│   │           │       ├── screens/
-│   │           │       ├── adapters/
-│   │           │       ├── viewmodels/
-│   │           │       ├── repository/
-│   │           │       ├── api/
-│   │           │       ├── ws/                 # WebSocket client
-│   │           │       └── models/
-│   │           │
-│   │           ├── res/
-│   │           │   ├── layout/
-│   │           │   ├── drawable/
-│   │           │   ├── mipmap/
-│   │           │   ├── values/
-│   │           │   └── navigation/
-│   │           │
-│   │           └── AndroidManifest.xml
-│   │
+│   │   ├── build.gradle
+│   │   └── src/main/
+│   │       ├── AndroidManifest.xml
+│   │       ├── java/com/yatraverse/
+│   │       │   ├── MainActivity.kt
+│   │       │   ├── data/
+│   │       │   │   ├── api/                # ApiService, RetrofitClient
+│   │       │   │   ├── local/              # SessionManager (token storage)
+│   │       │   │   ├── models/             # AuthModels, Destination
+│   │       │   │   ├── repository/
+│   │       │   │   └── ws/                 # WebSocket client (planned)
+│   │       │   ├── domain/
+│   │       │   │   ├── models/
+│   │       │   │   └── usecases/
+│   │       │   └── presentation/
+│   │       │       ├── adapters/           # DestinationAdapter lives in screens/explore for now
+│   │       │       ├── navigation/
+│   │       │       ├── screens/            # splash, login, home, explore, bookings, community, profile
+│   │       │       └── viewmodels/
+│   │       └── res/                        # layout, menu, navigation, drawable, mipmap-anydpi-v26, values
 │   ├── build.gradle
-│   └── settings.gradle
+│   ├── settings.gradle
+│   └── gradlew / gradlew.bat
 │
-├── backend/
-│   │
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/
-│   │   │   │   └── com/yatraverse/backend/
-│   │   │   │       ├── controller/
-│   │   │   │       ├── service/
-│   │   │   │       ├── repository/
-│   │   │   │       ├── entity/
-│   │   │   │       ├── dto/
-│   │   │   │       ├── config/
-│   │   │   │       ├── security/               # JWT filters, providers
-│   │   │   │       ├── websocket/               # STOMP config, handlers
-│   │   │   │       └── storage/                 # MinIO client wrapper
-│   │   │   │
-│   │   │   └── resources/
-│   │   │       └── application.properties
-│   │   │
-│   │   └── test/
-│   │
-│   └── pom.xml
+├── backend/                              # ✅ Spring Boot 4.1.1, Java 25 (live on Render)
+│   ├── Dockerfile                        # used by Render and for local Docker runs
+│   ├── pom.xml
+│   ├── mvnw / mvnw.cmd / .mvn/
+│   └── src/main/
+│       ├── java/com/yatraverse/backend/
+│       │   ├── BackendApplication.java
+│       │   ├── controller/               # AuthController, DestinationController
+│       │   ├── service/                  # AuthService
+│       │   ├── repository/               # UserRepository, DestinationRepository
+│       │   ├── model/                    # User, Destination (JPA entities)
+│       │   ├── dto/                      # LoginRequest, SignupRequest, AuthResponse
+│       │   ├── security/                 # JwtAuthFilter, JwtUtil, SecurityConfig
+│       │   ├── websocket/                # planned
+│       │   └── storage/                  # planned (MinIO / R2 client)
+│       └── resources/application.properties
 │
 ├── ai-service/
 │   │
@@ -1277,7 +1275,7 @@ Install:
 
 ```text
 Android Studio
-JDK
+JDK 25
 Python 3.x
 Git
 PostgreSQL (with pgvector extension)
@@ -1347,9 +1345,9 @@ spring.datasource.password=${POSTGRES_PASSWORD:yatraverse}
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 
+# property key names below are illustrative; check the real application.properties
 jwt.secret=${JWT_SECRET}
-jwt.access-token-expiry-ms=${JWT_ACCESS_EXPIRY_MS:900000}
-jwt.refresh-token-expiry-ms=${JWT_REFRESH_EXPIRY_MS:604800000}
+jwt.expiration=${JWT_EXPIRATION:86400000}
 
 minio.endpoint=${MINIO_ENDPOINT:http://localhost:9000}
 minio.access-key=${MINIO_ACCESS_KEY:yatraverse}
@@ -1360,8 +1358,10 @@ minio.bucket=${MINIO_BUCKET:yatraverse-media}
 Run:
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run        # Windows: mvnw.cmd spring-boot:run
 ```
+
+The project targets **JDK 25** (the Docker image uses Java 25).
 
 Backend:
 
@@ -1496,7 +1496,9 @@ python app/rag/retrieval/test_retrieval.py
 6. Start an Android emulator or connect a physical device
 7. Click **Run**
 
-For an Android Emulator, a local Spring Boot server usually uses:
+The app currently points at the deployed Render backend (`https://yatraverse-bnv5.onrender.com`). The first request after idle can take about a minute while the free instance wakes up.
+
+For an Android Emulator, a **local** Spring Boot server usually uses:
 
 ```text
 http://10.0.2.2:8080
@@ -1508,6 +1510,14 @@ instead of:
 ```text
 http://localhost:8080
 ```
+
+To use the deployed backend instead, set the Retrofit base URL in `RetrofitClient.kt` to:
+
+```text
+https://yatraverse-bnv5.onrender.com/
+```
+
+The first request after idle can take up to a minute because the free instance sleeps.
 
 ---
 
@@ -1523,8 +1533,7 @@ POSTGRES_USERNAME=
 POSTGRES_PASSWORD=
 
 JWT_SECRET=
-JWT_ACCESS_EXPIRY_MS=
-JWT_REFRESH_EXPIRY_MS=
+JWT_EXPIRATION=86400000        # token lifetime in ms (24 h)
 
 MINIO_ENDPOINT=
 MINIO_ACCESS_KEY=
@@ -1561,18 +1570,58 @@ Add them to `.gitignore`.
 
 The stack does not change. Only **where each piece runs** changes, and this is done purely through environment variables.
 
-| Piece | Local development | Free deployment |
-|---|---|---|
-| PostgreSQL + pgvector | `docker compose` | **Neon** free plan (pgvector supported) |
-| Object storage | MinIO (`docker compose`) | **Cloudflare R2** (S3-compatible) |
-| Spring Boot backend | `mvn spring-boot:run` | **Render** free web service (Docker) |
-| Android app | Emulator / phone | APK shared via **GitHub Releases** |
-| AI service (FastAPI + Qwen3 8B + BGE-M3) | Your machine | See below |
+| Piece | Local development | Free deployment | Status |
+|---|---|---|---|
+| PostgreSQL | local Postgres / `docker compose` | **Render PostgreSQL** now (temporary) → **Neon** later (pgvector) | ✅ Render DB `yatraverse-db` is available |
+| Object storage | MinIO (`docker compose`) | **Cloudflare R2** (S3-compatible) | ⏳ not started |
+| Spring Boot backend | `./mvnw spring-boot:run` | **Render** free web service (Docker) | ✅ live |
+| Android app | Emulator / phone | APK shared via **GitHub Releases** | 🚧 app talks to the live backend; APK release not started |
+| AI service (FastAPI + Qwen3 8B + BGE-M3) | Your machine | See below | ⏳ not started |
+
+## Live backend
+
+```text
+https://yatraverse-bnv5.onrender.com
+```
+
+Free instances sleep after idle time. The first cold start took about 107 seconds to boot Spring, so expect a slow first request.
+
+## Render web service settings (working configuration)
+
+| Field | Value |
+|---|---|
+| Language | Docker |
+| Branch | `main` |
+| Region | Singapore (same region as the database) |
+| Root Directory | *empty* |
+| Dockerfile Path | `backend/Dockerfile` |
+| Docker Build Context Directory | `backend` |
+| Docker Command | *empty* |
+| Instance type | Free |
+
+## Render environment variables
+
+| Key | Value |
+|---|---|
+| `POSTGRES_URL` | JDBC form of the database's **Internal** URL: `jdbc:postgresql://<internal-host>/<database>` (no username or password inside) |
+| `POSTGRES_USERNAME` | database user from the Render database page |
+| `POSTGRES_PASSWORD` | database password from the Render database page |
+| `JWT_SECRET` | long random string (Render's **Generate** button works) |
+| `JWT_EXPIRATION` | `86400000` |
+
+Render sets `PORT` itself (the app listened on 10000), and the backend reads it through `server.port=${PORT:8080}`. Never commit these values or paste them in chats or screenshots.
+
+## Redeploying and common problems
+
+- Render deploys from the branch chosen in the service settings (`main`). Merge and push to `main` to update the deployed backend.
+- **"No matching entries" in the Dockerfile Path field** means the file does not exist on the selected branch. Push or merge it into that branch, refresh the page, and select it from the dropdown.
+- Use the database's **Internal** URL for the backend on Render. It only works between Render services in the same region.
+- If the backend fails to start, open the service's **Logs** tab first.
 
 ### Notes and limits
 
-- Backend on Render's free plan sleeps after idle time, so the first request can take about a minute. Cap the JVM memory (for example `JAVA_TOOL_OPTIONS=-Xmx350m`).
-- Do not use Render's free Postgres for long-term data, since it expires. Use Neon.
+- The free backend sleeps after idle time. Consider capping JVM memory (for example `JAVA_TOOL_OPTIONS=-Xmx350m`) because the free plan has 512 MB RAM.
+- Render's free Postgres is temporary. Check its expiry date in the Render dashboard and move to **Neon** before then (dump and restore, then change the three `POSTGRES_*` variables; for Neon, the URL needs `?sslmode=require`).
 - Free-tier limits change often. **Verify current limits before relying on them.**
 
 ### The AI service
@@ -1665,6 +1714,7 @@ YatraVerse implements:
 - MinIO bucket policies / signed URLs for secure file upload
 - WebSocket connection authentication (JWT on handshake)
 - No credentials in GitHub
+- Secrets live only in Render environment variables or a local `.env`; any credential that was pasted into a chat or screenshot must be rotated
 
 Emergency functionality does not depend on an AI-generated response.
 
@@ -1672,7 +1722,7 @@ Emergency functionality does not depend on an AI-generated response.
 
 # 🚧 Development Roadmap
 
-## Phase 1 — Project Setup
+## Phase 1 — Project Setup  ✅ mostly done (AI environment still pending)
 
 ```text
 Repository
@@ -1683,7 +1733,7 @@ MinIO
 Python AI Environment
 ```
 
-## Phase 2 — Auth & Basic Application
+## Phase 2 — Auth & Basic Application  🚧 in progress (signup + login work end-to-end; Home/Profile/Explore content still basic)
 
 ```text
 Spring Security + JWT
@@ -1693,7 +1743,7 @@ Profile
 Navigation
 ```
 
-## Phase 3 — Backend
+## Phase 3 — Backend  🚧 started (Destination API)
 
 ```text
 User API
@@ -1780,7 +1830,7 @@ Feedback
 Crowd Analytics
 ```
 
-## Phase 11 — Deployment
+## Phase 11 — Deployment  🚧 started (backend + database live on Render)
 
 ```text
 Docker (local, docker compose)
@@ -1800,7 +1850,9 @@ Android -> APK via GitHub Releases
 
 # 🏆 Milestones
 
-- [ ] JWT auth working end-to-end
+- [x] JWT signup/login implemented in Spring Boot (login verified locally)
+- [x] JWT auth working end-to-end (Android app → deployed backend): signup and login
+- [ ] Explore screen shows real destination images
 - [ ] PGVector extension enabled and indexed
 - [ ] Qwen3 8B loads and runs inference locally
 - [ ] RAG retrieval returns relevant chunks
@@ -1812,7 +1864,8 @@ Android -> APK via GitHub Releases
 - [ ] Crowd prediction model trained
 - [ ] Eco score rule engine complete
 - [ ] Android integration complete
-- [ ] Free deployment working (Render + Neon + R2)
+- [x] Backend deployed on Render with a Render PostgreSQL database
+- [ ] Free deployment complete (Neon + R2 + AI service)
 
 ---
 
@@ -1942,9 +1995,15 @@ This allows the team to gain practical experience in:
 ```text
 🚧 Under Development
 
-Done:   repo scaffolding, docker-compose (Postgres+pgvector, MinIO),
-        Android app runs on emulator (Pixel 5, API 34)
-Next:   verify docker compose, Spring Boot bootstrap, users table, JWT auth
+Done:   repo scaffolding, Android app (splash, login, signup, home, explore,
+        bookings, community, profile screens + Retrofit + session storage),
+        Spring Boot backend (JWT auth, destinations API), Dockerfile,
+        backend + PostgreSQL deployed on Render (free tier),
+        Android app connected to the live backend (login + signup verified),
+        4 seeded destinations shown in Explore
+Next:   add real image URLs for destinations (plus a small backend update
+        endpoint), rotate the database password, then move the database to
+        Neon and start MinIO/R2 and the AI service
 ```
 
 YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot (Security + WebSocket), PostgreSQL + PGVector, MinIO, OpenStreetMap/MapLibre, Machine Learning, Computer Vision, Qwen3 8B, and Retrieval-Augmented Generation.

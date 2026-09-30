@@ -10,3 +10,9 @@ data class LoginResponse(
     val email: String,
     val fullName: String
 )
+
+data class SignupRequest(
+    val fullName: String,
+    val email: String,
+    val password: String
+)

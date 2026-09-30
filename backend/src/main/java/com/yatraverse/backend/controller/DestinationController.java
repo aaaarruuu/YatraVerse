@@ -29,4 +29,15 @@ public class DestinationController {
     public Destination createDestination(@RequestBody Destination destination) {
         return destinationRepository.save(destination);
     }
+
+    @PutMapping("/{id}")
+    public Destination updateDestination(@PathVariable Long id, @RequestBody Destination update) {
+        Destination existing = destinationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Destination not found"));
+        if (update.getName() != null) existing.setName(update.getName());
+        if (update.getLocation() != null) existing.setLocation(update.getLocation());
+        if (update.getDescription() != null) existing.setDescription(update.getDescription());
+        if (update.getImageUrl() != null) existing.setImageUrl(update.getImageUrl());
+        return destinationRepository.save(existing);
+    }
 }

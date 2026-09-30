@@ -22,6 +22,10 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         _binding = FragmentLoginBinding.bind(view)
 
+        binding.tvGoSignup.setOnClickListener {
+            findNavController().navigate(R.id.action_login_to_signup)
+        }
+
         binding.btnLogin.setOnClickListener {
 
             val email = binding.etEmail.text.toString().trim()

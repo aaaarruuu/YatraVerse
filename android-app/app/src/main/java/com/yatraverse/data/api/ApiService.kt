@@ -1,5 +1,6 @@
 package com.yatraverse.data.api
 
+import com.yatraverse.data.models.SignupRequest
 import com.yatraverse.data.models.Destination
 import com.yatraverse.data.models.LoginRequest
 import com.yatraverse.data.models.LoginResponse
@@ -16,4 +17,7 @@ interface ApiService {
     @GET("api/destinations")
     suspend fun getDestinations(): Response<List<Destination>>
 
+
+    @POST("api/auth/signup")
+    suspend fun signup(@Body request: SignupRequest): Response<LoginResponse>
 }
