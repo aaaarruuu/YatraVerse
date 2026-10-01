@@ -8,6 +8,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ApiService {
 
@@ -17,6 +18,8 @@ interface ApiService {
     @GET("api/destinations")
     suspend fun getDestinations(): Response<List<Destination>>
 
+    @GET("api/destinations/{id}")
+    suspend fun getDestination(@Path("id") id: Long): Response<Destination>
 
     @POST("api/auth/signup")
     suspend fun signup(@Body request: SignupRequest): Response<LoginResponse>

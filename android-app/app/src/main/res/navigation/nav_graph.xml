@@ -60,7 +60,19 @@
         android:id="@+id/exploreFragment"
         android:name="com.yatraverse.presentation.screens.explore.ExploreFragment"
         android:label="Explore"
-        tools:layout="@layout/fragment_explore" />
+        tools:layout="@layout/fragment_explore">
+
+        <action
+            android:id="@+id/action_explore_to_detail"
+            app:destination="@id/destinationDetailFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/destinationDetailFragment"
+        android:name="com.yatraverse.presentation.screens.explore.DestinationDetailFragment"
+        android:label="Destination"
+        tools:layout="@layout/fragment_destination_detail" />
 
     <fragment
         android:id="@+id/bookingsFragment"
