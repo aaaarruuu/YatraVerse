@@ -4,7 +4,8 @@ import com.yatraverse.backend.model.Destination;
 import com.yatraverse.backend.repository.DestinationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
