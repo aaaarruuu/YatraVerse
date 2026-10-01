@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,7 +28,12 @@ class ExploreFragment : Fragment(R.layout.fragment_explore) {
         progressBar = view.findViewById(R.id.progressBar)
         emptyState = view.findViewById(R.id.tvEmptyState)
 
-        adapter = DestinationAdapter(emptyList())
+        adapter = DestinationAdapter(emptyList()) { destination ->
+            findNavController().navigate(
+                R.id.action_explore_to_detail,
+                bundleOf("destinationId" to destination.id)
+            )
+        }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 

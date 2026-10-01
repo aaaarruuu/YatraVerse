@@ -22,7 +22,8 @@ public class DestinationController {
     @GetMapping("/{id}")
     public Destination getDestination(@PathVariable Long id) {
         return destinationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Destination not found"));
+        .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Destination not found"));
     }
 
     @PostMapping

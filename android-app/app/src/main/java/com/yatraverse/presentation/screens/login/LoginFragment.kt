@@ -10,6 +10,7 @@ import com.yatraverse.R
 import com.yatraverse.data.api.RetrofitClient
 import com.yatraverse.data.models.LoginRequest
 import com.yatraverse.databinding.FragmentLoginBinding
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment(R.layout.fragment_login) {
@@ -44,25 +45,31 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         }
     }
 
+    private fun setLoading(loading: Boolean) {
+        binding.progressLogin.visibility = if (loading) View.VISIBLE else View.GONE
+        binding.btnLogin.isEnabled = !loading
+        binding.btnLogin.text = if (loading) "Logging in..." else "Login"
+        if (!loading) binding.tvLoginHint.visibility = View.GONE
+    }
+
     private fun performLogin(email: String, password: String) {
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
+        setLoading(true)
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            val hintJob = launch {
+                delay(5000)
+                binding.tvLoginHint.visibility = View.VISIBLE
+            }
+            try {
                 val response = RetrofitClient.apiService.login(
-                    LoginRequest(
-                        email = email,
-                        password = password
-                    )
+                    LoginRequest(email = email, password = password)
                 )
 
                 if (response.isSuccessful && response.body() != null) {
-
                     val loginResponse = response.body()!!
 
-                    com.yatraverse.data.local.SessionManager(
-                        requireContext()
-                    ).saveSession(
+                    com.yatraverse.data.local.SessionManager(requireContext()).saveSession(
                         token = loginResponse.token,
                         email = loginResponse.email,
                         fullName = loginResponse.fullName
@@ -74,12 +81,8 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    findNavController().navigate(
-                        R.id.action_login_to_home
-                    )
-
+                    findNavController().navigate(R.id.action_login_to_home)
                 } else {
-
                     Toast.makeText(
                         requireContext(),
                         "Login failed: ${response.code()}",
@@ -87,17 +90,20 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                     ).show()
                 }
 
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
-
                 Toast.makeText(
                     requireContext(),
                     "Network error: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
+            } finally {
+                hintJob.cancel()
+                if (_binding != null) setLoading(false)
             }
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

@@ -1,13 +1,13 @@
 # YatraVerse AI - Project Progress
 
-Last updated: 2026-09-30 (signup added, Android connected to live backend)
+Last updated: 2026-10-01 (destination images done, DB password rotated)
 
 ## Current Status
 
 The Spring Boot backend (JWT auth + destinations API) is built and **deployed
 on Render** with a Render PostgreSQL database. The Android app is connected to
 the live backend: login and signup both work end-to-end, and the Explore
-screen lists the seeded destinations. The ai-service, ml and llm modules
+screen lists the seeded destinations with real images. The ai-service, ml and llm modules
 still have no code.
 
 The whole project is being kept free to run and deploy (see "Free
@@ -15,8 +15,8 @@ Deployment" below). The tech stack itself is unchanged.
 
 ## Current Step
 
-Step 4: Explore images. Destinations have imageUrl = null, so add real,
-freely usable image URLs and a small backend update endpoint to save them.
+Step 5: Destination detail. Add GET /api/destinations/{id}, a detail screen
+in Android opened by tapping an Explore card, and more destinations.
 
 ## Completed
 
@@ -31,8 +31,15 @@ freely usable image URLs and a small backend update endpoint to save them.
   POST /api/auth/signup, fragment_signup.xml, SignupFragment, nav_graph
   action login -> signup -> home, "New here? Create an account" link on the
   login screen). Tested: a new account can be created and lands on Home.
-- Explore screen: RecyclerView of destination cards with Glide already
-  installed. 4 destinations exist in the database, all with imageUrl = null.
+- Explore screen: RecyclerView of destination cards with Glide. 4
+  destinations exist, all now with real images.
+- Destination images: authenticated PUT /api/destinations/{id} saves an
+  imageUrl. Wikimedia Commons 960px thumbnails (via the Wikipedia REST summary
+  API) were saved for all 4 destinations and show in the app.
+- Render deploy was stale (old commit 62387fc, no PUT route, so saves gave
+  403). Fixed with Manual Deploy of commit 962f04d. Auto-Deploy can be set to
+  "On Commit" in Settings > Build & Deploy.
+- Render database password reset and POSTGRES_PASSWORD updated.
 - Spring Boot backend (Spring Boot 4.1.1, Java 25, Maven wrapper):
   - JPA entities: User, Destination; repositories for both.
   - AuthController + AuthService (signup/login), JwtUtil, JwtAuthFilter,
@@ -72,10 +79,10 @@ the Dockerfile was not on the selected branch (`main`) yet.
 
 ## Not Done Yet
 
-- The database password was shared in a chat and must be reset in Render
-  (yatraverse-db), then POSTGRES_PASSWORD updated in the web service.
-- Destination images: imageUrl is null for all 4 destinations. No update
-  endpoint exists yet (needs a small PUT addition).
+- JAVA_TOOL_OPTIONS=-Xmx350m not set yet on the Render web service.
+- Destination detail endpoint and screen; only 4 destinations exist.
+- Uncommitted local items: WHY_TO_USE_THIS_STACK edit and
+  android-app/_backup_before_signup/ (delete or add to .gitignore).
 - Refresh tokens, roles, WebSocket, MinIO/R2 storage.
 - pgvector is not enabled anywhere yet.
 - FastAPI AI service, RAG pipeline, Qwen3 8B, BGE-M3, ML, Heritage Scanner.
@@ -119,18 +126,23 @@ host is a config change, not a code change. Verify free-tier limits
 before relying on them; they change often. The free backend sleeps when
 idle, and its first request can take about a minute or more.
 
+## Option: Self-host on an old laptop
+
+Considered: 8 GB RAM / SSD laptop running Docker (Spring Boot, Postgres with
+pgvector, MinIO) exposed with a Cloudflare Tunnel. Not enough for Qwen3 8B.
+Pros: no cold starts, no expiring DB. Cons: own uptime, backups, security; a
+quick-tunnel URL changes on restart. No code change needed, only env vars and
+BASE_URL in RetrofitClient.kt. Decision pending; Render stays for now.
+
 ## Next Steps (in order)
 
-1. Reset the Render database password, then update POSTGRES_PASSWORD in the
-   web service settings (still open; the old password was posted in a chat).
-2. Explore images: find real, freely usable image URLs, add a small backend
-   PUT endpoint to update a destination's imageUrl, and save the URLs.
-3. Add more destinations and richer detail data.
-4. Add refresh tokens and roles.
-5. Cap JVM memory for the 512 MB free instance (JAVA_TOOL_OPTIONS=-Xmx350m).
-6. Create a Neon project, enable pgvector, and move the database before the
-   Render database expires.
-7. Later: MinIO locally and R2 when deployed; FastAPI AI service via laptop
+1. Set JAVA_TOOL_OPTIONS=-Xmx350m on the Render web service.
+2. Add GET /api/destinations/{id}, a detail screen in Android, and more
+   destinations (Ajanta, Ellora, Hampi, Orchha, ...).
+3. Add refresh tokens and roles.
+4. Decide: Neon (enable pgvector) or self-hosted Postgres before the Render
+   database expires.
+5. Later: MinIO locally and R2 when deployed; FastAPI AI service via laptop
    tunnel; RAG; ML features.
 
 ## How to Continue

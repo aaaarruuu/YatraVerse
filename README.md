@@ -43,6 +43,20 @@ The project is also designed as a **learning-focused AI engineering project**, w
 
 ---
 
+# 🧭 Current Status (2026-09-30)
+
+| Area | State |
+|---|---|
+| Android app | Splash, Login, Signup, Home, Explore (real images), Bookings, Community, Profile; talks to the live backend |
+| Backend | Spring Boot (JWT auth, destinations list + image update), deployed on Render (Docker) |
+| Database | Render PostgreSQL (temporary); password rotated; Neon or self-host planned |
+| Live URL | https://yatraverse-bnv5.onrender.com (free tier, slow first request) |
+| AI service, RAG, ML, MinIO/R2, WebSocket | not started |
+
+**Next:** cap JVM memory, destination detail screen + more destinations, refresh tokens and roles, database migration, then the AI stack.
+
+---
+
 # 🚀 Project Overview
 
 YatraVerse AI aims to provide a complete digital tourism ecosystem where users can:
@@ -1624,6 +1638,23 @@ Render sets `PORT` itself (the app listened on 10000), and the backend reads it 
 - Render's free Postgres is temporary. Check its expiry date in the Render dashboard and move to **Neon** before then (dump and restore, then change the three `POSTGRES_*` variables; for Neon, the URL needs `?sslmode=require`).
 - Free-tier limits change often. **Verify current limits before relying on them.**
 
+### Destination image endpoint
+
+Authenticated `PUT /api/destinations/{id}` with body `{ "imageUrl": "..." }` updates a destination's image. The four seeded destinations use freely licensed Wikimedia Commons images (960px thumbnails from the Wikipedia REST summary API). Send a `User-Agent` header when calling Wikipedia.
+
+### Self-hosting option (old laptop)
+
+Because every host-specific value comes from environment variables and the backend ships as a Docker image, the backend can also run on your own hardware instead of Render. An 8 GB RAM laptop is enough for Spring Boot, Postgres (with pgvector) and MinIO; it is **not** enough for Qwen3 8B.
+
+1. Install Docker Desktop (WSL2) on Windows, or Ubuntu Server for better uptime.
+2. Clone the repo and create a `.env` with new secrets (never commit it).
+3. Add the backend service to `docker-compose.yml` (it builds from `backend/Dockerfile`) and run `docker compose up -d --build`.
+4. Expose it with a Cloudflare Tunnel (`cloudflared tunnel --url http://localhost:8080`). Quick tunnels change URL on every restart; a named tunnel needs a free Cloudflare account and a domain.
+5. Update `BASE_URL` in `RetrofitClient.kt` and rebuild the app.
+6. Stop the laptop sleeping (power settings), cap Docker memory in `.wslconfig`, and schedule `pg_dump` backups.
+
+Trade-offs: no cold starts or expiring database, but you own uptime, backups and security. Render can remain as a fallback.
+
 ### The AI service
 
 Qwen3 8B and BGE-M3 are too large for any free web container. Options that keep the same models:
@@ -1733,7 +1764,7 @@ MinIO
 Python AI Environment
 ```
 
-## Phase 2 — Auth & Basic Application  🚧 in progress (signup + login work end-to-end; Home/Profile/Explore content still basic)
+## Phase 2 — Auth & Basic Application  🚧 in progress (signup + login work end-to-end; Explore shows real images; Home/Profile content still basic)
 
 ```text
 Spring Security + JWT
@@ -1743,7 +1774,7 @@ Profile
 Navigation
 ```
 
-## Phase 3 — Backend  🚧 started (Destination API)
+## Phase 3 — Backend  🚧 started (Destination API: list + image update endpoint)
 
 ```text
 User API
@@ -1852,7 +1883,7 @@ Android -> APK via GitHub Releases
 
 - [x] JWT signup/login implemented in Spring Boot (login verified locally)
 - [x] JWT auth working end-to-end (Android app → deployed backend): signup and login
-- [ ] Explore screen shows real destination images
+- [x] Explore screen shows real destination images (Wikimedia URLs saved through the backend PUT endpoint)
 - [ ] PGVector extension enabled and indexed
 - [ ] Qwen3 8B loads and runs inference locally
 - [ ] RAG retrieval returns relevant chunks
@@ -1865,6 +1896,9 @@ Android -> APK via GitHub Releases
 - [ ] Eco score rule engine complete
 - [ ] Android integration complete
 - [x] Backend deployed on Render with a Render PostgreSQL database
+- [x] Render database password rotated
+- [ ] Destination detail screen + more destinations
+- [ ] Refresh tokens and roles
 - [ ] Free deployment complete (Neon + R2 + AI service)
 
 ---
@@ -2001,9 +2035,12 @@ Done:   repo scaffolding, Android app (splash, login, signup, home, explore,
         backend + PostgreSQL deployed on Render (free tier),
         Android app connected to the live backend (login + signup verified),
         4 seeded destinations shown in Explore
-Next:   add real image URLs for destinations (plus a small backend update
-        endpoint), rotate the database password, then move the database to
-        Neon and start MinIO/R2 and the AI service
+Also:   Explore screen shows real destination images (PUT
+        /api/destinations/{id} saves the image URL), database password
+        rotated
+Next:   cap JVM memory on Render, destination detail screen and more
+        destinations, refresh tokens and roles, then move the database to
+        Neon (or self-host) and start MinIO/R2 and the AI service
 ```
 
 YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot (Security + WebSocket), PostgreSQL + PGVector, MinIO, OpenStreetMap/MapLibre, Machine Learning, Computer Vision, Qwen3 8B, and Retrieval-Augmented Generation.

@@ -11,7 +11,8 @@ import com.yatraverse.R
 import com.yatraverse.data.models.Destination
 
 class DestinationAdapter(
-    private var destinations: List<Destination>
+    private var destinations: List<Destination>,
+    private val onItemClick: (Destination) -> Unit
 ) : RecyclerView.Adapter<DestinationAdapter.DestinationViewHolder>() {
 
     class DestinationViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -36,6 +37,7 @@ class DestinationAdapter(
             .load(destination.imageUrl)
             .placeholder(android.R.drawable.ic_menu_gallery)
             .into(holder.image)
+        holder.itemView.setOnClickListener { onItemClick(destination) }
     }
 
     override fun getItemCount(): Int = destinations.size
