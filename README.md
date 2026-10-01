@@ -1,49 +1,49 @@
-# 🌍 YatraVerse AI
+# YatraVerse AI
 
 > **AI-Powered Smart Tourism Ecosystem**
 
-> 💸 **Zero-cost by design:** everything runs locally with `docker compose` and can be deployed on free tiers. See [Free Deployment](#-free-deployment).
+> **Zero-cost by design:** everything runs locally with `docker compose` and can be deployed on free tiers. See [Free Deployment](#free-deployment).
 
 YatraVerse AI is an AI-powered smart tourism ecosystem that combines **personalized trip planning, intelligent itinerary generation, heritage exploration, tourist safety, sustainable travel, local experiences, community interaction, and tourism analytics** into a single Android application.
 
-The project is also designed as a **learning-focused AI engineering project**, where the team builds a full RAG (Retrieval-Augmented Generation) pipeline on top of an open-weight LLM (**Qwen3 8B**), along with embeddings, vector search, and supporting AI/ML services — with a strong emphasis on understanding how each layer of the stack actually works rather than relying on managed/vendor services wherever a learning opportunity exists.
+The project is also designed as a **learning-focused AI engineering project**, where the team builds a full RAG (Retrieval-Augmented Generation) pipeline on top of an open-weight LLM (**Qwen3 8B**), along with embeddings, vector search, and supporting AI/ML services, with a strong emphasis on understanding how each layer of the stack actually works rather than relying on managed/vendor services wherever a learning opportunity exists.
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
-- [Project Overview](#-project-overview)
-- [Technology Decisions](#-technology-decisions--why)
-- [Project Objectives](#-project-objectives)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Technology Stack](#-technology-stack)
-- [Project Structure](#-project-structure)
-- [LLM Service — Qwen3 8B](#-llm-service--qwen3-8b)
-- [RAG Architecture](#-rag-architecture)
-- [AI/ML Components](#-aiml-components)
-- [Android Application](#-android-application)
-- [Backend Architecture](#-backend-architecture)
-- [Database](#-database)
-- [Authentication](#-authentication)
-- [Real-Time Notifications](#-real-time-notifications)
-- [Object Storage](#-object-storage)
-- [Maps](#-maps)
-- [Team Collaboration](#-team-collaboration)
-- [Git Workflow](#-git-workflow)
-- [Installation](#-installation)
-- [Running the Project](#-running-the-project)
-- [Environment Variables](#-environment-variables)
-- [Free Deployment](#-free-deployment)
-- [Development Roadmap](#-development-roadmap)
-- [Testing](#-testing)
-- [Security](#-security)
-- [Future Scope](#-future-scope)
-- [Project Status](#-project-status)
+- [Project Overview](#project-overview)
+- [Technology Decisions](#technology-decisions-why)
+- [Project Objectives](#project-objectives)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#complete-project-folder-structure)
+- [LLM Service: Qwen3 8B](#llm-service-qwen3-8b)
+- [RAG Architecture](#rag-retrieval-augmented-generation)
+- [AI/ML Components](#crowd-prediction)
+- [Android Application](#android-application)
+- [Backend Architecture](#backend)
+- [Database](#database)
+- [Authentication](#authentication)
+- [Real-Time Notifications](#real-time-notifications)
+- [Object Storage](#object-storage)
+- [Maps](#maps)
+- [Team Collaboration](#team-collaboration)
+- [Git Workflow](#git-workflow)
+- [Installation](#installation)
+- [Running the Project](#clone-repository)
+- [Environment Variables](#environment-variables)
+- [Free Deployment](#free-deployment)
+- [Development Roadmap](#development-roadmap)
+- [Testing](#testing)
+- [Security](#security)
+- [Future Scope](#future-scope)
+- [Project Status](#project-status)
 
 ---
 
-# 🧭 Current Status (2026-09-30)
+# Current Status (2026-09-30)
 
 | Area | State |
 |---|---|
@@ -57,7 +57,7 @@ The project is also designed as a **learning-focused AI engineering project**, w
 
 ---
 
-# 🚀 Project Overview
+# Project Overview
 
 YatraVerse AI aims to provide a complete digital tourism ecosystem where users can:
 
@@ -103,7 +103,7 @@ RAG
 
 ---
 
-# 🔧 Technology Decisions — Why
+# Technology Decisions: Why
 
 The stack intentionally favors self-hosted, learnable components over fully managed vendor services, so the team gains hands-on engineering experience at every layer. Summary of key decisions:
 
@@ -121,8 +121,8 @@ The stack intentionally favors self-hosted, learnable components over fully mana
 | Image Storage | **MinIO (S3-compatible)** | Firebase Storage | Learn self-hosted object storage and S3 APIs |
 | Main DB | **PostgreSQL** | Firebase/Firestore | Learn relational schema design at scale |
 | Vector DB | **PGVector** | FAISS | Learn SQL + vector similarity in a single database |
-| Mobile | **Android Studio + Kotlin** | — | Native Android development |
-| Backend | **Spring Boot** | — | Strong backend engineering foundation |
+| Mobile | **Android Studio + Kotlin** | n/a | Native Android development |
+| Backend | **Spring Boot** | n/a | Strong backend engineering foundation |
 | AI Service | **Python + FastAPI** | Flask | Typed, async-friendly API/service architecture |
 | LLM | **Qwen3 8B (Transformers/PyTorch)** | Ollama-only wrapper | Learn actual model loading, tokenization, and inference, not just calling a CLI |
 | Embeddings | **BGE-M3 (multilingual)** | Basic sentence-transformers model | Stronger retrieval quality and multilingual tourism support (Hindi/regional languages) |
@@ -133,7 +133,7 @@ The stack intentionally favors self-hosted, learnable components over fully mana
 
 ---
 
-# 🎯 Project Objectives
+# Project Objectives
 
 ## 1. AI-Based Personalized Trip Planning
 
@@ -370,7 +370,7 @@ Admin dashboard provides:
 
 ---
 
-# 🧩 Key Features
+# Key Features
 
 | Feature | Technology |
 |---|---|
@@ -394,7 +394,7 @@ Admin dashboard provides:
 
 ---
 
-# 🏗️ System Architecture
+# System Architecture
 
 ```text
                          YATRAVERSE AI
@@ -442,7 +442,7 @@ Admin dashboard provides:
 
 ---
 
-# 🛠️ Technology Stack
+# Technology Stack
 
 ## Android Frontend
 
@@ -487,7 +487,7 @@ Android
 
 ---
 
-# ☕ Backend
+# Backend
 
 ## Spring Boot
 
@@ -526,11 +526,11 @@ Spring AI (selective use)      # planned
 
 ---
 
-# 🐘 Database
+# Database
 
 ## PostgreSQL + PGVector
 
-PostgreSQL is the **single** primary database — for both relational data and vector search (via the `pgvector` extension). There is no separate FAISS index; vectors live alongside relational metadata for simpler filtering and joins.
+PostgreSQL is the **single** primary database, for both relational data and vector search (via the `pgvector` extension). There is no separate FAISS index; vectors live alongside relational metadata for simpler filtering and joins.
 
 Possible tables:
 
@@ -579,9 +579,9 @@ CREATE INDEX ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
 
 ---
 
-# 🔐 Authentication
+# Authentication
 
-Authentication is handled entirely by **Spring Security + JWT**, backed by PostgreSQL — no Firebase Auth dependency.
+Authentication is handled entirely by **Spring Security + JWT**, backed by PostgreSQL, with no Firebase Auth dependency.
 
 ### Flow
 
@@ -614,7 +614,7 @@ JWT Filter validates + sets SecurityContext
 
 ---
 
-# 📡 Real-Time Notifications
+# Real-Time Notifications
 
 Real-time features (emergency alerts, booking updates, community activity) are delivered via **WebSocket** (Spring WebSocket / STOMP) instead of Firebase Cloud Messaging.
 
@@ -632,11 +632,11 @@ Client receives real-time push
 Android local notification shown
 ```
 
-For scenarios requiring delivery while the app is fully closed/offline, a push provider can be layered in later — this is deliberately out of scope for the MVP to keep the learning focus on building real-time infra from scratch.
+For scenarios requiring delivery while the app is fully closed/offline, a push provider can be layered in later. This is deliberately out of scope for the MVP to keep the learning focus on building real-time infra from scratch.
 
 ---
 
-# 🗄️ Object Storage
+# Object Storage
 
 **MinIO** (S3-compatible) replaces Firebase Storage for:
 
@@ -653,7 +653,7 @@ Backend interacts with MinIO via the AWS S3 SDK (Java) / `boto3` (Python), so th
 
 ---
 
-# 🗺️ Maps
+# Maps
 
 **OpenStreetMap tile data + MapLibre GL** replaces Google Maps SDK:
 
@@ -665,13 +665,13 @@ This avoids Google Maps API billing/vendor lock-in and gives the team direct exp
 
 ---
 
-# 🤖 LLM Service — Qwen3 8B
+# LLM Service: Qwen3 8B
 
 ## What changed from the original plan
 
 The project originally proposed training a small tourism-domain LLM (**YatraLM**) completely from scratch. The team has decided to instead load and run an existing open-weight model, **Qwen3 8B**, via Hugging Face **Transformers/PyTorch**, and to build the RAG, prompting, and (optionally) fine-tuning layers around it.
 
-This still delivers strong LLM-engineering learning — model loading, tokenization, quantization, inference optimization, prompt engineering, and optionally LoRA fine-tuning — without the multi-month cost of training a transformer from random weights.
+This still delivers strong LLM-engineering learning (model loading, tokenization, quantization, inference optimization, prompt engineering, and optionally LoRA fine-tuning) without the multi-month cost of training a transformer from random weights.
 
 ## LLM Service Responsibilities
 
@@ -728,7 +728,7 @@ data/
 
 ---
 
-# 🔎 RAG — Retrieval-Augmented Generation
+# RAG: Retrieval-Augmented Generation
 
 Qwen3 8B should not be expected to know India-specific, up-to-date tourism details out of the box. YatraVerse uses **RAG** to ground answers in a curated tourism knowledge base.
 
@@ -764,7 +764,7 @@ Final Answer
 
 ---
 
-# 🗂️ RAG Knowledge Base
+# RAG Knowledge Base
 
 ```text
 knowledge_base/
@@ -790,7 +790,7 @@ knowledge_base/
 
 ---
 
-# 🧪 RAG Development Strategy
+# RAG Development Strategy
 
 We will first build RAG **without LangChain**, for learning purposes.
 
@@ -813,9 +813,9 @@ After understanding the complete pipeline, the same system can optionally be rei
 
 ---
 
-# 🔢 Vector Search
+# Vector Search
 
-**PostgreSQL + PGVector is the only vector store** — there is no separate FAISS index to keep in sync, since embeddings and relational tourism metadata live in the same database and can be joined/filtered together directly in SQL.
+**PostgreSQL + PGVector is the only vector store.** There is no separate FAISS index to keep in sync, since embeddings and relational tourism metadata live in the same database and can be joined/filtered together directly in SQL.
 
 ```text
 Embedding Model  = BGE-M3 (multilingual)
@@ -825,7 +825,7 @@ Index            = HNSW (vector_cosine_ops)
 
 ---
 
-# 👁️ Heritage Scanner
+# Heritage Scanner
 
 ```text
 Android Camera
@@ -859,9 +859,9 @@ History + Architecture + Travel Information
 
 ---
 
-# 📈 Crowd Prediction
+# Crowd Prediction
 
-Crowd prediction is handled by a dedicated ML model — never by the LLM.
+Crowd prediction is handled by a dedicated ML model, never by the LLM.
 
 ### Input
 
@@ -895,9 +895,9 @@ Qwen3 8B can explain the prediction in natural language but should not replace t
 
 ---
 
-# 🌱 Eco Travel Score
+# Eco Travel Score
 
-The Eco Score uses a transparent, deterministic Java rule engine — not an LLM.
+The Eco Score uses a transparent, deterministic Java rule engine, not an LLM.
 
 Example:
 
@@ -921,7 +921,7 @@ Qwen3 8B can explain the score to the user in plain language.
 
 ---
 
-# 📱 Android Application
+# Android Application
 
 ## Recommended Screens
 
@@ -947,7 +947,7 @@ Home
 
 ---
 
-# 📁 Complete Project Folder Structure
+# Complete Project Folder Structure
 
 ```text
 YatraVerse-AI/
@@ -960,7 +960,7 @@ YatraVerse-AI/
 ├── CONTRIBUTING.md
 ├── docker-compose.yml          # postgres+pgvector, minio, backend, ai-service
 │
-├── android-app/                          # ✅ login + signup + explore list, connected to the live backend
+├── android-app/                          # done: login + signup + explore list, connected to the live backend
 │   ├── app/
 │   │   ├── build.gradle
 │   │   └── src/main/
@@ -986,7 +986,7 @@ YatraVerse-AI/
 │   ├── settings.gradle
 │   └── gradlew / gradlew.bat
 │
-├── backend/                              # ✅ Spring Boot 4.1.1, Java 25 (live on Render)
+├── backend/                              # done: Spring Boot 4.1.1, Java 25 (live on Render)
 │   ├── Dockerfile                        # used by Render and for local Docker runs
 │   ├── pom.xml
 │   ├── mvnw / mvnw.cmd / .mvn/
@@ -1011,7 +1011,7 @@ YatraVerse-AI/
 │   │   ├── models/                # DB/data models used by ai-service
 │   │   ├── vision/                # Heritage Scanner (monument recognition)
 │   │   │
-│   │   ├── rag/                   # ✅ SINGLE source of truth for RAG
+│   │   ├── rag/                   # SINGLE source of truth for RAG
 │   │   │   ├── ingestion/
 │   │   │   ├── chunking/
 │   │   │   ├── embeddings/         # BGE-M3
@@ -1078,11 +1078,11 @@ YatraVerse-AI/
 
 ---
 
-# 👥 Team Collaboration
+# Team Collaboration
 
 For a team project, divide the project into independent modules.
 
-## Team Member 1 — Android Developer
+## Team Member 1: Android Developer
 
 Responsible for:
 
@@ -1101,7 +1101,7 @@ Profile
 
 ---
 
-## Team Member 2 — Backend Developer
+## Team Member 2: Backend Developer
 
 Responsible for:
 
@@ -1120,7 +1120,7 @@ Community APIs
 
 ---
 
-## Team Member 3 — LLM + RAG Engineer
+## Team Member 3: LLM + RAG Engineer
 
 Responsible for:
 
@@ -1137,7 +1137,7 @@ LLM Evaluation
 
 ---
 
-## Team Member 4 — ML / AI Engineer
+## Team Member 4: ML / AI Engineer
 
 Responsible for:
 
@@ -1152,7 +1152,7 @@ AI Integration
 
 ---
 
-# 🌿 Git Branch Strategy
+# Git Branch Strategy
 
 Use:
 
@@ -1183,7 +1183,7 @@ main
 
 ---
 
-# 🔄 Git Workflow
+# Git Workflow
 
 ## 1. Clone Repository
 
@@ -1247,7 +1247,7 @@ Another team member should review the code before merging.
 
 ---
 
-# 📝 Commit Convention
+# Commit Convention
 
 ### Feature
 
@@ -1281,7 +1281,7 @@ refactor: improve RAG retrieval
 
 ---
 
-# ⚙️ Installation
+# Installation
 
 ## Prerequisites
 
@@ -1306,7 +1306,7 @@ CUDA
 
 ---
 
-# 📥 Clone Repository
+# Clone Repository
 
 ```bash
 git clone https://github.com/YOUR-TEAM/YatraVerse-AI.git
@@ -1315,7 +1315,7 @@ cd YatraVerse-AI
 
 ---
 
-# 🐳 Start Local Infrastructure (Postgres + pgvector + MinIO)
+# Start Local Infrastructure (Postgres + pgvector + MinIO)
 
 ```bash
 cp .env.example .env        # then fill in the values
@@ -1333,7 +1333,7 @@ Stop with `docker compose down` (add `-v` to also delete the data volumes).
 
 ---
 
-# ☕ Run Spring Boot Backend
+# Run Spring Boot Backend
 
 Go to:
 
@@ -1385,7 +1385,7 @@ http://localhost:8080
 
 ---
 
-# 🗄️ Run MinIO (Object Storage)
+# Run MinIO (Object Storage)
 
 Included in `docker compose up -d` above. To run it on its own:
 
@@ -1400,7 +1400,7 @@ Console: `http://localhost:9001`
 
 ---
 
-# 🐘 Enable PGVector
+# Enable PGVector
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -1408,7 +1408,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ---
 
-# 🐍 Run AI Service
+# Run AI Service
 
 Go to:
 
@@ -1444,7 +1444,7 @@ uvicorn app.main:app --reload --port 8000
 
 ---
 
-# 🤖 Load & Serve Qwen3 8B
+# Load & Serve Qwen3 8B
 
 Go to:
 
@@ -1478,7 +1478,7 @@ python train_lora.py
 
 ---
 
-# 🔎 Run RAG
+# Run RAG
 
 Prepare documents:
 
@@ -1500,7 +1500,7 @@ python app/rag/retrieval/test_retrieval.py
 
 ---
 
-# 📱 Run Android Application
+# Run Android Application
 
 1. Open **Android Studio**
 2. Open the `android-app/` directory
@@ -1535,7 +1535,7 @@ The first request after idle can take up to a minute because the free instance s
 
 ---
 
-# 🔐 Environment Variables
+# Environment Variables
 
 Never commit credentials to GitHub.
 
@@ -1580,17 +1580,17 @@ Add them to `.gitignore`.
 
 ---
 
-# 💸 Free Deployment
+# Free Deployment
 
 The stack does not change. Only **where each piece runs** changes, and this is done purely through environment variables.
 
 | Piece | Local development | Free deployment | Status |
 |---|---|---|---|
-| PostgreSQL | local Postgres / `docker compose` | **Render PostgreSQL** now (temporary) → **Neon** later (pgvector) | ✅ Render DB `yatraverse-db` is available |
-| Object storage | MinIO (`docker compose`) | **Cloudflare R2** (S3-compatible) | ⏳ not started |
-| Spring Boot backend | `./mvnw spring-boot:run` | **Render** free web service (Docker) | ✅ live |
-| Android app | Emulator / phone | APK shared via **GitHub Releases** | 🚧 app talks to the live backend; APK release not started |
-| AI service (FastAPI + Qwen3 8B + BGE-M3) | Your machine | See below | ⏳ not started |
+| PostgreSQL | local Postgres / `docker compose` | **Render PostgreSQL** now (temporary) → **Neon** later (pgvector) | Done: Render DB `yatraverse-db` is available |
+| Object storage | MinIO (`docker compose`) | **Cloudflare R2** (S3-compatible) | Not started |
+| Spring Boot backend | `./mvnw spring-boot:run` | **Render** free web service (Docker) | Done: live |
+| Android app | Emulator / phone | APK shared via **GitHub Releases** | In progress: app talks to the live backend; APK release not started |
+| AI service (FastAPI + Qwen3 8B + BGE-M3) | Your machine | See below | Not started |
 
 ## Live backend
 
@@ -1666,7 +1666,7 @@ The backend must treat the AI service as optional: if `AI_SERVICE_URL` is unreac
 
 ---
 
-# 🧪 Testing
+# Testing
 
 ## Android
 
@@ -1732,7 +1732,7 @@ RMSE
 
 ---
 
-# 🛡️ Security
+# Security
 
 YatraVerse implements:
 
@@ -1751,9 +1751,9 @@ Emergency functionality does not depend on an AI-generated response.
 
 ---
 
-# 🚧 Development Roadmap
+# Development Roadmap
 
-## Phase 1 — Project Setup  ✅ mostly done (AI environment still pending)
+## Phase 1: Project Setup (mostly done, AI environment still pending)
 
 ```text
 Repository
@@ -1764,7 +1764,7 @@ MinIO
 Python AI Environment
 ```
 
-## Phase 2 — Auth & Basic Application  🚧 in progress (signup + login work end-to-end; Explore shows real images; Home/Profile content still basic)
+## Phase 2: Auth & Basic Application (in progress: signup + login work end-to-end; Explore shows real images; Home/Profile content still basic)
 
 ```text
 Spring Security + JWT
@@ -1774,7 +1774,7 @@ Profile
 Navigation
 ```
 
-## Phase 3 — Backend  🚧 started (Destination API: list + image update endpoint)
+## Phase 3: Backend (started: Destination API with list + image update endpoint)
 
 ```text
 User API
@@ -1785,7 +1785,7 @@ Booking API
 Review API
 ```
 
-## Phase 4 — LLM Service
+## Phase 4: LLM Service
 
 ```text
 Load Qwen3 8B (Transformers)
@@ -1797,7 +1797,7 @@ Inference Endpoint (FastAPI)
 Optional: LoRA Fine-tuning
 ```
 
-## Phase 5 — RAG
+## Phase 5: RAG
 
 ```text
 Tourism Documents
@@ -1813,7 +1813,7 @@ Retriever
 Qwen3 8B
 ```
 
-## Phase 6 — AI Features
+## Phase 6: AI Features
 
 ```text
 Heritage Scanner
@@ -1823,7 +1823,7 @@ AI Trip Planner
 Smart Itinerary
 ```
 
-## Phase 7 — Real-Time & Storage
+## Phase 7: Real-Time & Storage
 
 ```text
 WebSocket notifications
@@ -1831,7 +1831,7 @@ MinIO media pipeline
 Emergency broadcast
 ```
 
-## Phase 8 — Community
+## Phase 8: Community
 
 ```text
 Posts
@@ -1841,7 +1841,7 @@ Reviews
 Photos
 ```
 
-## Phase 9 — Marketplace
+## Phase 9: Marketplace
 
 ```text
 Guides
@@ -1851,7 +1851,7 @@ Experiences
 Bookings
 ```
 
-## Phase 10 — Analytics
+## Phase 10: Analytics
 
 ```text
 Visitor Trends
@@ -1861,7 +1861,7 @@ Feedback
 Crowd Analytics
 ```
 
-## Phase 11 — Deployment  🚧 started (backend + database live on Render)
+## Phase 11: Deployment (started: backend + database live on Render)
 
 ```text
 Docker (local, docker compose)
@@ -1879,7 +1879,7 @@ Android -> APK via GitHub Releases
 
 ---
 
-# 🏆 Milestones
+# Milestones
 
 - [x] JWT signup/login implemented in Spring Boot (login verified locally)
 - [x] JWT auth working end-to-end (Android app → deployed backend): signup and login
@@ -1903,7 +1903,7 @@ Android -> APK via GitHub Releases
 
 ---
 
-# 🔮 Future Scope
+# Future Scope
 
 Future versions of YatraVerse AI can include:
 
@@ -1944,7 +1944,7 @@ Other possibilities:
 
 ---
 
-# 📊 Final Architecture
+# Final Architecture
 
 ```text
                     YATRAVERSE AI
@@ -1977,7 +1977,7 @@ Other possibilities:
 
 ---
 
-# 🎓 Learning Objective
+# Learning Objective
 
 The most important goal of this project is to understand the complete modern AI-integrated application pipeline:
 
@@ -2024,10 +2024,10 @@ This allows the team to gain practical experience in:
 
 ---
 
-# 📌 Project Status
+# Project Status
 
 ```text
-🚧 Under Development
+Under Development
 
 Done:   repo scaffolding, Android app (splash, login, signup, home, explore,
         bookings, community, profile screens + Retrofit + session storage),
@@ -2047,6 +2047,6 @@ YatraVerse AI is being developed as a collaborative academic and learning projec
 
 ---
 
-# ⭐ Final Goal
+# Final Goal
 
-> **YatraVerse AI aims to become an intelligent, personalized, safe, sustainable, and culturally aware tourism platform while providing the development team with hands-on experience in modern software engineering and applied LLM/RAG engineering — built on a self-hosted, vendor-independent stack.**
+> **YatraVerse AI aims to become an intelligent, personalized, safe, sustainable, and culturally aware tourism platform while providing the development team with hands-on experience in modern software engineering and applied LLM/RAG engineering, built on a self-hosted, vendor-independent stack.**
