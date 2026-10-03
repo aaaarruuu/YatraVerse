@@ -1,61 +1,70 @@
 # YatraVerse AI - Project Progress
 
-Last updated: 2026-10-01 (destination images done, DB password rotated)
+Last updated: 2026-10-03 (RAG chat working end to end locally, 9 monuments in the knowledge base)
 
 ## Current Status
 
-The Spring Boot backend (JWT auth + destinations API) is built and **deployed
-on Render** with a Render PostgreSQL database. The Android app is connected to
-the live backend: login and signup both work end-to-end, and the Explore
-screen lists the seeded destinations with real images. The ai-service, ml and llm modules
-still have no code.
+The Spring Boot backend (JWT auth, destinations API, POST /api/chat) is deployed
+on Render with a Render PostgreSQL database. The Android app is connected to
+the live backend: login, signup, Explore (9 destinations with images), the
+destination detail screen and an AI chat screen all work.
+
+The RAG chat works end to end on the dev laptop: Android chat screen ->
+Spring Boot /api/chat -> FastAPI /chat -> BGE-M3 + Neon pgvector search ->
+Qwen3 4B (Ollama) -> grounded answer with sources. The AI service is not
+deployed yet, so chat only works while the laptop is running it.
 
 The whole project is being kept free to run and deploy (see "Free
-Deployment" below). The tech stack itself is unchanged.
+Deployment Plan" below). The RAG database is Neon (pgvector), not local Docker.
 
 ## Current Step
 
-Step 5: Destination detail. Add GET /api/destinations/{id}, a detail screen
-in Android opened by tapping an Explore card, and more destinations.
+Step 7: deploy the AI service (Cloudflare Tunnel or a free GPU notebook) and
+point the Render backend at it.
 
 ## Completed
 
 - Repository scaffolding, docker-compose.yml (postgres + minio).
 - Android app (package com.yatraverse): Splash, Login, Signup, Home, Explore,
-  Bookings, Community and Profile fragments, bottom navigation, nav graph,
-  Retrofit client, ApiService, SessionManager. Runs on a Pixel 5 emulator
-  (API 34).
-- Android now points at the live Render backend (base URL changed from the
-  local one).
-- Signup screen added (SignupRequest model, ApiService.signup ->
-  POST /api/auth/signup, fragment_signup.xml, SignupFragment, nav_graph
-  action login -> signup -> home, "New here? Create an account" link on the
-  login screen). Tested: a new account can be created and lands on Home.
-- Explore screen: RecyclerView of destination cards with Glide. 4
-  destinations exist, all now with real images.
-- Destination images: authenticated PUT /api/destinations/{id} saves an
-  imageUrl. Wikimedia Commons 960px thumbnails (via the Wikipedia REST summary
-  API) were saved for all 4 destinations and show in the app.
-- Render deploy was stale (old commit 62387fc, no PUT route, so saves gave
-  403). Fixed with Manual Deploy of commit 962f04d. Auto-Deploy can be set to
-  "On Commit" in Settings > Build & Deploy.
-- Render database password reset and POSTGRES_PASSWORD updated.
-- Spring Boot backend (Spring Boot 4.1.1, Java 25, Maven wrapper):
-  - JPA entities: User, Destination; repositories for both.
-  - AuthController + AuthService (signup/login), JwtUtil, JwtAuthFilter,
-    SecurityConfig.
-  - DestinationController (destinations list).
-  - Config comes from environment variables.
-  - Verified locally: app starts, connects to Postgres, login and destination
-    queries run.
-- backend/Dockerfile added.
-- feature/android-project-skeleton merged into `main` (fast-forward) and
-  pushed, so `main` now holds the backend, Dockerfile and Android skeleton.
-- Render deployment:
-  - PostgreSQL database `yatraverse-db` (PostgreSQL 18, Singapore).
-  - Web service built from `main` with Docker; logs show "Your service is
-    live". Tomcat started on port 10000 (Render's PORT).
-  - Public URL: https://yatraverse-bnv5.onrender.com
+  Destination detail, Chat, Bookings, Community and Profile fragments, bottom
+  navigation, nav graph, Retrofit client, ApiService, SessionManager.
+  Runs on a Pixel 5 emulator.
+- Android points at the live Render backend. Signup screen, login loader
+  (spinner and "waking up the server" hint for the free-tier cold start).
+- Explore screen: RecyclerView of destination cards with Glide. 9 destinations
+  (Taj Mahal, Khajuraho, Konark, Sanchi, Ajanta, Ellora, Hampi, Orchha, Mandu),
+  all with real Wikimedia images saved through the authenticated
+  PUT /api/destinations/{id}.
+- Destination detail: GET /api/destinations/{id} (404 for unknown ids). The
+  detail screen has an "Ask AI" button that opens the chat for that place.
+- Spring Boot backend (Spring Boot 4.1.1, Java 25, Maven wrapper): JPA entities
+  User and Destination, JWT auth (signup/login, JwtUtil, JwtAuthFilter,
+  SecurityConfig), DestinationController, POST /api/chat (forwards to the AI
+  service). Config comes from environment variables.
+- Render deployment: PostgreSQL `yatraverse-db` and a Docker web service built
+  from `main`. Public URL: https://yatraverse-bnv5.onrender.com.
+  JAVA_TOOL_OPTIONS=-Xmx350m, Auto-Deploy On Commit. Render database password
+  rotated.
+- RAG (ai-service/app/rag):
+  - Neon project `yatraverse-sg` (Singapore), `chunks` table with vector(1024)
+    and an HNSW index.
+  - Knowledge base: 9 monument files in knowledge_base/monuments (55 chunks).
+    Facts were written from general knowledge and should be checked against
+    the ASI website, especially closing days.
+  - ingest.py (section-aware chunking, BGE-M3 embeddings, delete-and-reload per
+    file), retrieve.py (destination-name filter, MIN_SCORE 0.45), answer.py
+    (greeting and thanks replies, retry with the place name for vague
+    questions, grounded prompt, "I don't know" fallback).
+  - LLM: Qwen3 4B through Ollama (laptop RTX 4050, 6 GB VRAM). This replaces
+    the planned Qwen3 8B Transformers setup because of the VRAM limit.
+  - FastAPI /chat endpoint (uvicorn, port 8000).
+  - Tested in the terminal and in the app: greeting, "Is it open at 5 PM?"
+    (Khajuraho), closing days (Ellora), history (Ajanta), Jahaz Mahal (Mandu),
+    Vittala Temple (Hampi), railway station (Orchha), 1561 capture (Mandu),
+    and an off-topic question ("pasta carbonara") correctly gets "I don't know".
+- Dev machine: i7-13645HX, 16 GB RAM, RTX 4050 6 GB, Python 3.12. Docker
+  Desktop is installed but virtualization is off in the BIOS, so Neon is used
+  instead of local Docker.
 
 ## Render Configuration (working)
 
@@ -74,21 +83,31 @@ Environment variables (names only, never store values in the repo):
 POSTGRES_URL (JDBC form of the Internal Database URL, no user/password inside),
 POSTGRES_USERNAME, POSTGRES_PASSWORD, JWT_SECRET, JWT_EXPIRATION (86400000).
 
-Lesson learned: "No matching entries" in Render's Dockerfile Path field meant
-the Dockerfile was not on the selected branch (`main`) yet.
+Lessons learned:
+- "No matching entries" in Render's Dockerfile Path field meant the Dockerfile
+  was not on the selected branch (`main`) yet.
+- A failed Render build keeps the old version live.
+- Never paste a command that sets DATABASE_URL into chat. Paste output only.
+  Environment variables do not carry over between terminals, so set
+  DATABASE_URL in each terminal that needs it.
 
 ## Not Done Yet
 
-- JAVA_TOOL_OPTIONS=-Xmx350m not set yet on the Render web service.
-- Destination detail endpoint and screen; only 4 destinations exist.
-- Uncommitted local items: WHY_TO_USE_THIS_STACK edit and
-  android-app/_backup_before_signup/ (delete or add to .gitignore).
-- Refresh tokens, roles, WebSocket, MinIO/R2 storage.
-- pgvector is not enabled anywhere yet.
-- FastAPI AI service, RAG pipeline, Qwen3 8B, BGE-M3, ML, Heritage Scanner.
-- Neon migration (the Render free database is temporary; check its expiry
-  date in the Render dashboard).
-- Tests.
+- Deploy the AI service (Cloudflare Tunnel or a free GPU notebook) and point
+  the Render backend at it.
+- Refresh tokens and roles (POST and PUT on destinations should be admin-only).
+- Move app data from Render Postgres (temporary) to Neon before it expires.
+- Tourism analytics (admin): an events table (destination views, chat
+  questions, grounded or not, response time), bookings backend, admin-only
+  stats endpoints, and a dashboard (web page or Android admin screen).
+  Depends on roles.
+- Bookings backend, WebSocket, MinIO/R2 storage.
+- Trip planner, Heritage Scanner, ML features, tests.
+- Release the app as an APK through GitHub Releases.
+- Git cleanup: commit and merge feature/rag-knowledge-base into `main`; delete
+  or ignore android-app/_backup_before_signup/; decide on the
+  WHY_TO_USE_THIS_STACK edit.
+- Later RAG improvements: hybrid search, reranker.
 
 ## Existing Project Structure
 
@@ -101,13 +120,13 @@ YatraVerse/
   .gitignore
   .env.example
   docker-compose.yml
-  android-app/            (Gradle project, app/ module, skeleton screens)
+  android-app/            (Gradle project, app/ module, screens incl. chat)
   backend/                (Spring Boot: Dockerfile, pom.xml, mvnw, src/)
-  ai-service/             (empty - .gitkeep only)
+  ai-service/             (app/rag/: ingest.py, retrieve.py, answer.py; app/main.py FastAPI)
   llm/checkpoints/        (empty - .gitkeep only)
   ml/                     (empty - .gitkeep only)
   data/raw|processed|instruction/   (empty - .gitkeep only)
-  knowledge_base/         (empty - .gitkeep only)
+  knowledge_base/         (monuments/: 9 files)
   docs/                   (empty - .gitkeep only)
   tests/                  (empty - .gitkeep only)
 
@@ -115,11 +134,12 @@ YatraVerse/
 
 | Piece | Local | Free deploy | Status |
 |-------|-------|-------------|--------|
-| Postgres | local Postgres / docker compose | Render PostgreSQL now, Neon later (pgvector) | Render DB live |
+| Postgres | Neon (or local Postgres install) | Render PostgreSQL now (backend, temporary); Neon for RAG (pgvector) | Render DB live; Neon live for RAG |
 | Object storage | MinIO | Cloudflare R2 | not started |
 | Spring Boot backend | ./mvnw spring-boot:run | Render (free web service, Docker) | live |
 | Android app | Emulator | APK via GitHub Releases | not started |
-| AI service (Qwen3 8B, BGE-M3) | Own machine | Laptop + tunnel, or free notebook GPU (demo only) | not started |
+| AI service (Qwen3 4B, BGE-M3) | Own PC (RTX 4050 6 GB) | Cloudflare Tunnel | not started |
+| Vector DB (pgvector) | Neon | Neon free tier | live |
 
 All host-specific values come from environment variables, so switching
 host is a config change, not a code change. Verify free-tier limits
@@ -129,21 +149,23 @@ idle, and its first request can take about a minute or more.
 ## Option: Self-host on an old laptop
 
 Considered: 8 GB RAM / SSD laptop running Docker (Spring Boot, Postgres with
-pgvector, MinIO) exposed with a Cloudflare Tunnel. Not enough for Qwen3 8B.
+pgvector, MinIO) exposed with a Cloudflare Tunnel. Not enough for Qwen3.
 Pros: no cold starts, no expiring DB. Cons: own uptime, backups, security; a
 quick-tunnel URL changes on restart. No code change needed, only env vars and
 BASE_URL in RetrofitClient.kt. Decision pending; Render stays for now.
 
 ## Next Steps (in order)
 
-1. Set JAVA_TOOL_OPTIONS=-Xmx350m on the Render web service.
-2. Add GET /api/destinations/{id}, a detail screen in Android, and more
-   destinations (Ajanta, Ellora, Hampi, Orchha, ...).
-3. Add refresh tokens and roles.
-4. Decide: Neon (enable pgvector) or self-hosted Postgres before the Render
-   database expires.
-5. Later: MinIO locally and R2 when deployed; FastAPI AI service via laptop
-   tunnel; RAG; ML features.
+1. Commit the RAG work and merge it into `main` (git cleanup).
+2. Deploy the AI service (Cloudflare Tunnel) and point the Render backend at it.
+3. Refresh tokens and roles (admin-only POST and PUT on destinations).
+4. Add an events table to log destination views and chat questions (so
+   analytics has data from day one).
+5. Bookings backend, then admin stats endpoints and the analytics dashboard.
+6. Move app data from Render Postgres to Neon.
+7. Release an APK through GitHub Releases.
+8. Later: hybrid search, reranker, MinIO/R2, WebSocket, trip planner,
+   Heritage Scanner, ML features, tests.
 
 ## How to Continue
 
@@ -152,4 +174,7 @@ BASE_URL in RetrofitClient.kt. Decision pending; Render stays for now.
 3. Do the next unfinished item above. For new work, create a feature branch
    from main, and merge back into main to trigger a Render redeploy (Render
    deploys from main).
-4. Claude explains each step before writing code.
+4. To run the RAG chat locally: start Ollama (qwen3:4b), set DATABASE_URL in
+   the ai-service terminal, run `uvicorn app.main:app --host 0.0.0.0 --port 8000`,
+   run the backend with `.\mvnw spring-boot:run`, then run the app from Android Studio.
+5. Claude explains each step before writing code.

@@ -1,0 +1,22 @@
+destination: Hampi
+city: Hampi
+state: Karnataka
+category: monument
+
+## Overview
+Hampi is the site of the ruined capital of the Vijayanagara Empire, on the banks of the Tungabhadra river in Karnataka. The ruins are spread across a landscape of large boulders and hills. Hampi is a UNESCO World Heritage Site since 1986.
+
+## History
+The Vijayanagara Empire was founded in 1336 by Harihara I and Bukka Raya I. It reached its peak in the early 16th century under Krishnadevaraya. After the Battle of Talikota in 1565 the capital was captured and sacked, and it was never rebuilt.
+
+## Main monuments
+Important monuments include the Virupaksha Temple, which is still in use for worship, and the Vittala Temple with its famous stone chariot and musical pillars. Other well-known sites are the Lotus Mahal, the Elephant Stables and the Hazara Rama Temple.
+
+## Visiting hours
+The monuments are spread over a large area, so visitors usually need a full day or more. Most of the sites can be visited during daylight hours. Check the official Archaeological Survey of India website for current timings and ticket prices before you travel.
+
+## Best time to visit
+The best time to visit is from October to February, when the weather is cooler. Summers are very hot, and walking among the ruins in the afternoon can be tiring.
+
+## Getting there
+The nearest railway station is Hosapete (Hospet), about 13 km from Hampi. The nearest major airport is at Hubballi, about 140 km away. Bengaluru is about 350 km away and is connected to Hosapete by train and bus.

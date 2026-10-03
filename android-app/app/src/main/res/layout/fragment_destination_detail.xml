@@ -41,6 +41,15 @@
                 android:textColor="#666666"
                 android:textSize="14sp" />
 
+            <Button
+                android:id="@+id/btnAskAi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="Ask AI about this place" />
+
             <TextView
                 android:id="@+id/tvDetailDescription"
                 android:layout_width="match_parent"

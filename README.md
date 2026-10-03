@@ -2,7 +2,7 @@
 
 > **AI-Powered Smart Tourism Ecosystem**
 
-> 💸 **Zero-cost by design:** everything runs locally with `docker compose` and can be deployed on free tiers. See [Free Deployment](#-free-deployment).
+> 💸 **Zero-cost by design:** the database runs on **Neon** (free Postgres with pgvector), the AI models run locally, and everything deploys on free tiers. No local Docker is needed. See [Free Deployment](#-free-deployment).
 
 YatraVerse AI is an AI-powered smart tourism ecosystem that combines **personalized trip planning, intelligent itinerary generation, heritage exploration, tourist safety, sustainable travel, local experiences, community interaction, and tourism analytics** into a single Android application.
 
@@ -43,17 +43,18 @@ The project is also designed as a **learning-focused AI engineering project**, w
 
 ---
 
-# 🧭 Current Status (2026-09-30)
+# 🧭 Current Status (2026-10-03)
 
 | Area | State |
 |---|---|
-| Android app | Splash, Login, Signup, Home, Explore (real images), Bookings, Community, Profile; talks to the live backend |
-| Backend | Spring Boot (JWT auth, destinations list + image update), deployed on Render (Docker) |
-| Database | Render PostgreSQL (temporary); password rotated; Neon or self-host planned |
+| Android app | Splash, Login (with loader), Signup, Home, Explore (9 destinations), Destination detail with an "Ask AI" button, Chat screen (JWT, answers with sources), Bookings, Community, Profile |
+| Backend | Spring Boot (JWT auth, destinations list + detail + image update, POST /api/chat forwarding to the AI service), deployed on Render (Docker). The chat endpoint works locally; the AI service is not deployed yet |
+| Database | Render PostgreSQL (temporary) for app data. Neon (pgvector) for the RAG chunks table |
 | Live URL | https://yatraverse-bnv5.onrender.com (free tier, slow first request) |
-| AI service, RAG, ML, MinIO/R2, WebSocket | not started |
+| AI service / RAG | FastAPI POST /chat: BGE-M3 embeddings, pgvector search filtered by destination, "I don't know" threshold (0.45), greeting replies, grounded answers from Qwen3 4B through Ollama on a laptop RTX 4050 (6 GB VRAM). Knowledge base: 9 monuments (55 chunks). Qwen3 4B via Ollama replaces the planned Qwen3 8B Transformers setup because of the 6 GB VRAM limit |
+| ML, MinIO/R2, WebSocket | not started |
 
-**Next:** cap JVM memory, destination detail screen + more destinations, refresh tokens and roles, database migration, then the AI stack.
+**Next:** deploy the AI service (Cloudflare Tunnel or a free GPU notebook), refresh tokens and roles, move app data to Neon, then trip planner, admin analytics and the other AI features.
 
 ---
 
@@ -127,7 +128,7 @@ The stack intentionally favors self-hosted, learnable components over fully mana
 | LLM | **Qwen3 8B (Transformers/PyTorch)** | Ollama-only wrapper | Learn actual model loading, tokenization, and inference, not just calling a CLI |
 | Embeddings | **BGE-M3 (multilingual)** | Basic sentence-transformers model | Stronger retrieval quality and multilingual tourism support (Hindi/regional languages) |
 | AI Framework | **Spring AI (selectively)** | Everything hand-rolled | Use it where it removes boilerplate, but understand the underlying HTTP/inference calls first |
-| Hosting | **Local Docker + free tiers** | Paid cloud | The whole project must run and deploy at $0; all hosts are configured through environment variables, so they are swappable without code changes |
+| Hosting | **Local dev + free tiers (Neon, Render)** | Paid cloud | The whole project must run and deploy at $0; all hosts are configured through environment variables, so they are swappable without code changes |
 
 > Firebase is no longer part of the core stack. It may optionally be reintroduced later for push notifications on top of WebSocket if offline delivery is required, but it is not a dependency for MVP.
 
@@ -573,9 +574,11 @@ CREATE TABLE knowledge_chunks (
 CREATE INDEX ON knowledge_chunks USING hnsw (embedding vector_cosine_ops);
 ```
 
-> **Current state:** the backend creates its tables (`users`, `destinations`) through Hibernate (`ddl-auto=update`). Locally it runs against PostgreSQL on `localhost:5432`. The deployed backend uses a **Render PostgreSQL 18** database (`yatraverse-db`, Singapore) through its *Internal Database URL*.
+> **Current state:** the backend creates its tables (`users`, `destinations`) through Hibernate (`ddl-auto=update`). Locally it reads `POSTGRES_URL` (a local PostgreSQL install or a Neon database). The deployed backend uses a **Render PostgreSQL 18** database (`yatraverse-db`, Singapore) through its *Internal Database URL*.
 >
-> **Planned:** Render's free Postgres is temporary, so the data will move to **Neon** (free Postgres with `pgvector`) before the Render database expires. `pgvector` is not used yet. Only `POSTGRES_URL`, username and password change when switching hosts.
+> **RAG database:** the RAG pipeline uses **Neon** (free Postgres with `pgvector`) instead of local Docker, because Docker Desktop needs BIOS virtualization, which is off on the dev machine. The `chunks` table uses `vector(1024)` with an HNSW index, and the AI service reads the connection string from the `DATABASE_URL` variable.
+>
+> **Planned:** Render's free Postgres is temporary, so the relational data will also move to Neon before the Render database expires. Only `POSTGRES_URL`, username and password change when switching hosts.
 
 ---
 
@@ -958,7 +961,7 @@ YatraVerse-AI/
 ├── LICENSE
 ├── .gitignore
 ├── CONTRIBUTING.md
-├── docker-compose.yml          # postgres+pgvector, minio, backend, ai-service
+├── docker-compose.yml          # optional (needs BIOS virtualization); Neon replaces local Postgres
 │
 ├── android-app/                          # ✅ login + signup + explore list, connected to the live backend
 │   ├── app/
@@ -987,7 +990,7 @@ YatraVerse-AI/
 │   └── gradlew / gradlew.bat
 │
 ├── backend/                              # ✅ Spring Boot 4.1.1, Java 25 (live on Render)
-│   ├── Dockerfile                        # used by Render and for local Docker runs
+│   ├── Dockerfile                        # used by Render to build the backend
 │   ├── pom.xml
 │   ├── mvnw / mvnw.cmd / .mvn/
 │   └── src/main/
@@ -1292,9 +1295,9 @@ Android Studio
 JDK 25
 Python 3.x
 Git
-PostgreSQL (with pgvector extension)
+Neon account (free managed Postgres with pgvector)
 Maven
-Docker (Postgres + pgvector and MinIO via docker compose)
+Docker (optional; Render builds the backend image itself)
 ```
 
 Recommended for LLM inference:
@@ -1315,21 +1318,22 @@ cd YatraVerse-AI
 
 ---
 
-# 🐳 Start Local Infrastructure (Postgres + pgvector + MinIO)
+# 🐘 Set Up Neon (Postgres + pgvector)
+
+Docker is not used for the database. Docker Desktop needs BIOS virtualization, so the RAG database lives on **Neon** (free tier).
+
+1. Create a free project at neon.tech (pick a region close to you).
+2. Open the **SQL Editor**, enable pgvector, and create the `chunks` table (`vector(1024)` column and an HNSW index, see the Database section).
+3. Copy the connection string from the Neon dashboard and keep it only in your local `.env` as `DATABASE_URL`. Never commit it or paste it in chats.
 
 ```bash
-cp .env.example .env        # then fill in the values
-docker compose up -d
-docker compose ps           # postgres and minio should be running
+cp .env.example .env        # then fill in the values (DATABASE_URL for Neon)
 ```
 
 ```text
-PostgreSQL + pgvector  ->  localhost:5432
-MinIO API              ->  http://localhost:9000
-MinIO console          ->  http://localhost:9001
+Neon (Postgres + pgvector)  ->  DATABASE_URL (ai-service)
+Spring Boot backend         ->  POSTGRES_URL (Render for now)
 ```
-
-Stop with `docker compose down` (add `-v` to also delete the data volumes).
 
 ---
 
@@ -1387,7 +1391,7 @@ http://localhost:8080
 
 # 🗄️ Run MinIO (Object Storage)
 
-Included in `docker compose up -d` above. To run it on its own:
+Not needed yet (object storage is not started). Use Cloudflare R2 when deployed. For local testing, run MinIO as a standalone binary, or with Docker if BIOS virtualization is enabled:
 
 ```bash
 docker run -p 9000:9000 -p 9001:9001 \
@@ -1401,6 +1405,8 @@ Console: `http://localhost:9001`
 ---
 
 # 🐘 Enable PGVector
+
+Run this in the Neon SQL Editor:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -1546,6 +1552,8 @@ POSTGRES_URL=
 POSTGRES_USERNAME=
 POSTGRES_PASSWORD=
 
+DATABASE_URL=                  # Neon connection string for ai-service (never commit)
+
 JWT_SECRET=
 JWT_EXPIRATION=86400000        # token lifetime in ms (24 h)
 
@@ -1564,7 +1572,7 @@ CORS_ALLOWED_ORIGINS=                   # set when deployed
 ```
 
 > The `MINIO_*` variables hold values for **any S3-compatible storage** (MinIO locally, Cloudflare R2 when deployed).
-> For Neon, `POSTGRES_URL` must end with `?sslmode=require`.
+> For Neon, `POSTGRES_URL` must end with `?sslmode=require`. The AI service uses the single variable `DATABASE_URL` for Neon.
 
 Sensitive files should not be committed:
 
@@ -1586,11 +1594,12 @@ The stack does not change. Only **where each piece runs** changes, and this is d
 
 | Piece | Local development | Free deployment | Status |
 |---|---|---|---|
-| PostgreSQL | local Postgres / `docker compose` | **Render PostgreSQL** now (temporary) → **Neon** later (pgvector) | ✅ Render DB `yatraverse-db` is available |
-| Object storage | MinIO (`docker compose`) | **Cloudflare R2** (S3-compatible) | ⏳ not started |
+| PostgreSQL | Neon (or a local Postgres install) | **Render PostgreSQL** now (temporary) for the backend; **Neon** for RAG (pgvector) | ✅ Render DB `yatraverse-db` live; 🚧 Neon for RAG |
+| Vector DB (pgvector) | Neon | Neon free tier | ⏳ planned |
+| Object storage | MinIO (standalone, optional) | **Cloudflare R2** (S3-compatible) | ⏳ not started |
 | Spring Boot backend | `./mvnw spring-boot:run` | **Render** free web service (Docker) | ✅ live |
 | Android app | Emulator / phone | APK shared via **GitHub Releases** | 🚧 app talks to the live backend; APK release not started |
-| AI service (FastAPI + Qwen3 8B + BGE-M3) | Your machine | See below | ⏳ not started |
+| AI service (FastAPI + Qwen3 + BGE-M3) | Your machine (RTX 4050 6 GB) | Cloudflare Tunnel (see below) | ⏳ not started |
 
 ## Live backend
 
@@ -1634,19 +1643,20 @@ Render sets `PORT` itself (the app listened on 10000), and the backend reads it 
 
 ### Notes and limits
 
-- The free backend sleeps after idle time. Consider capping JVM memory (for example `JAVA_TOOL_OPTIONS=-Xmx350m`) because the free plan has 512 MB RAM.
+- The free backend sleeps after idle time. JVM memory is capped with `JAVA_TOOL_OPTIONS=-Xmx350m` on Render because the free plan has 512 MB RAM. Auto-Deploy is set to On Commit.
+- RAG database: Neon (free, pgvector) instead of local Docker, because Docker Desktop needs BIOS virtualization. No paid AI APIs are used: BGE-M3 and Qwen3 run locally (Ollama). Hardware: RTX 4050 6 GB, so Qwen3 4B is the safe default and 8B is tried at 4-bit.
 - Render's free Postgres is temporary. Check its expiry date in the Render dashboard and move to **Neon** before then (dump and restore, then change the three `POSTGRES_*` variables; for Neon, the URL needs `?sslmode=require`).
 - Free-tier limits change often. **Verify current limits before relying on them.**
 
 ### Destination image endpoint
 
-Authenticated `PUT /api/destinations/{id}` with body `{ "imageUrl": "..." }` updates a destination's image. The four seeded destinations use freely licensed Wikimedia Commons images (960px thumbnails from the Wikipedia REST summary API). Send a `User-Agent` header when calling Wikipedia.
+Authenticated `PUT /api/destinations/{id}` with body `{ "imageUrl": "..." }` updates a destination's image. The nine seeded destinations use freely licensed Wikimedia Commons images (960px thumbnails from the Wikipedia REST summary API). Send a `User-Agent` header when calling Wikipedia.
 
 ### Self-hosting option (old laptop)
 
 Because every host-specific value comes from environment variables and the backend ships as a Docker image, the backend can also run on your own hardware instead of Render. An 8 GB RAM laptop is enough for Spring Boot, Postgres (with pgvector) and MinIO; it is **not** enough for Qwen3 8B.
 
-1. Install Docker Desktop (WSL2) on Windows, or Ubuntu Server for better uptime.
+1. Install Docker Desktop (WSL2) on Windows, or Ubuntu Server for better uptime. Docker Desktop needs BIOS virtualization enabled (it is off on the current dev machine, which is why Neon is the current plan).
 2. Clone the repo and create a `.env` with new secrets (never commit it).
 3. Add the backend service to `docker-compose.yml` (it builds from `backend/Dockerfile`) and run `docker compose up -d --build`.
 4. Expose it with a Cloudflare Tunnel (`cloudflared tunnel --url http://localhost:8080`). Quick tunnels change URL on every restart; a named tunnel needs a free Cloudflare account and a domain.
@@ -1774,7 +1784,7 @@ Profile
 Navigation
 ```
 
-## Phase 3 — Backend  🚧 started (Destination API: list + image update endpoint)
+## Phase 3 — Backend  🚧 started (Destination API: list, detail (404 handled), create, image update)
 
 ```text
 User API
@@ -1797,7 +1807,9 @@ Inference Endpoint (FastAPI)
 Optional: LoRA Fine-tuning
 ```
 
-## Phase 5 — RAG
+## Phase 5 — RAG  🚧 started
+
+🚧 working locally: knowledge_base/monuments (9 files), ai-service/app/rag ingest.py, retrieve.py and answer.py, Neon chunks table, FastAPI /chat, Android chat screen. Efficiency choices: section-aware chunking, destination filter, HNSW index, only the best 4-6 chunks sent to the LLM, "I don't know" threshold. LLM: Qwen3 4B via Ollama (RTX 4050, 6 GB VRAM).
 
 ```text
 Tourism Documents
@@ -1864,7 +1876,7 @@ Crowd Analytics
 ## Phase 11 — Deployment  🚧 started (backend + database live on Render)
 
 ```text
-Docker (local, docker compose)
+Local dev (Spring Boot, FastAPI, local models)
      ↓
 Spring Boot -> Render (free)
      ↓
@@ -1884,10 +1896,15 @@ Android -> APK via GitHub Releases
 - [x] JWT signup/login implemented in Spring Boot (login verified locally)
 - [x] JWT auth working end-to-end (Android app → deployed backend): signup and login
 - [x] Explore screen shows real destination images (Wikimedia URLs saved through the backend PUT endpoint)
-- [ ] PGVector extension enabled and indexed
-- [ ] Qwen3 8B loads and runs inference locally
-- [ ] RAG retrieval returns relevant chunks
-- [ ] RAG + Qwen3 8B produces grounded answers
+- [x] Destination detail screen
+- [x] 9 destinations with images
+- [x] Login loader for slow server start
+- [x] RAG: knowledge base (9 monuments) ingested into pgvector, retrieval tested
+- [x] PGVector extension enabled and indexed (on Neon)
+- [x] Qwen3 runs inference locally (4B via Ollama on an RTX 4050; 8B Transformers still planned)
+- [x] RAG retrieval returns relevant chunks
+- [x] RAG + Qwen3 produces grounded answers
+- [x] FastAPI /chat, Spring Boot /api/chat and the Android chat screen work end to end locally
 - [ ] Optional LoRA fine-tune improves domain responses
 - [ ] MinIO upload/download working
 - [ ] WebSocket real-time notifications working
@@ -1897,7 +1914,6 @@ Android -> APK via GitHub Releases
 - [ ] Android integration complete
 - [x] Backend deployed on Render with a Render PostgreSQL database
 - [x] Render database password rotated
-- [ ] Destination detail screen + more destinations
 - [ ] Refresh tokens and roles
 - [ ] Free deployment complete (Neon + R2 + AI service)
 
@@ -2030,17 +2046,17 @@ This allows the team to gain practical experience in:
 🚧 Under Development
 
 Done:   repo scaffolding, Android app (splash, login, signup, home, explore,
-        bookings, community, profile screens + Retrofit + session storage),
-        Spring Boot backend (JWT auth, destinations API), Dockerfile,
-        backend + PostgreSQL deployed on Render (free tier),
-        Android app connected to the live backend (login + signup verified),
-        4 seeded destinations shown in Explore
-Also:   Explore screen shows real destination images (PUT
-        /api/destinations/{id} saves the image URL), database password
-        rotated
-Next:   cap JVM memory on Render, destination detail screen and more
-        destinations, refresh tokens and roles, then move the database to
-        Neon (or self-host) and start MinIO/R2 and the AI service
+        destination detail, chat, bookings, community, profile screens +
+        Retrofit + session storage), Spring Boot backend (JWT auth,
+        destinations API, /api/chat), Dockerfile, backend + PostgreSQL
+        deployed on Render (free tier), 9 destinations with images,
+        RAG pipeline: knowledge base (9 monuments) in Neon pgvector,
+        BGE-M3 retrieval with an "I don't know" threshold, FastAPI /chat,
+        grounded answers from Qwen3 4B via Ollama (local),
+        Android chat screen working end to end on the emulator
+Next:   deploy the AI service, refresh tokens and roles, move app data to
+        Neon, trip planner, admin analytics, Heritage Scanner and the
+        other AI features
 ```
 
 YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot (Security + WebSocket), PostgreSQL + PGVector, MinIO, OpenStreetMap/MapLibre, Machine Learning, Computer Vision, Qwen3 8B, and Retrieval-Augmented Generation.

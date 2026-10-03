@@ -66,3 +66,10 @@ docker-compose.override.yml
 
 # Local H2 / backend data
 backend/data/
+ai-service/.venv/
+
+# Local backups and Python cache
+*.bak
+android-app/_backup_*/
+__pycache__/
+*.pyc

@@ -19,3 +19,5 @@
 | Embeddings        | **BGE-M3 / multilingual embedding model** | Basic sentence-transformers | Better RAG learning and multilingual tourism use cases                     |
 | AI framework      | **Spring AI selectively**                 | Everything manually         | Use it where useful, but understand the underlying APIs first              |
 | Hosting           | **Local Docker + free tiers**             | Paid cloud                  | Project must run and deploy at $0; env-var config keeps hosts swappable    |
+| Backend hosting   | **Docker image on Render (free)**         | Native runtime / paid VM    | The same Dockerfile runs locally and in production; Java 25 needs no host setup |
+| Hosted database   | **Render PostgreSQL now, Neon later**     | Firebase/Firestore          | Same-region internal URL is simple to start; Neon is better for longer-lived data and pgvector |
