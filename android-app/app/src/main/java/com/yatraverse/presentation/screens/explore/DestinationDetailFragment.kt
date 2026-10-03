@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -27,6 +28,7 @@ class DestinationDetailFragment : Fragment(R.layout.fragment_destination_detail)
         val name = view.findViewById<TextView>(R.id.tvDetailName)
         val location = view.findViewById<TextView>(R.id.tvDetailLocation)
         val description = view.findViewById<TextView>(R.id.tvDetailDescription)
+        val askAi = view.findViewById<Button>(R.id.btnAskAi)
 
         view.findViewById<Button>(R.id.btnDetailBack).setOnClickListener {
             findNavController().popBackStack()
@@ -53,6 +55,16 @@ class DestinationDetailFragment : Fragment(R.layout.fragment_destination_detail)
                         .load(d.imageUrl)
                         .placeholder(android.R.drawable.ic_menu_gallery)
                         .into(image)
+
+                    // The destination name is the chatbot's place filter
+                    val place = d.name
+                    askAi.setOnClickListener {
+                        findNavController().navigate(
+                            R.id.action_detail_to_chat,
+                            bundleOf("city" to place)
+                        )
+                    }
+
                     content.visibility = View.VISIBLE
                 } else {
                     error.text = "Failed to load (${response.code()})"

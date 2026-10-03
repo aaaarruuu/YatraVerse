@@ -1,0 +1,7 @@
+sentence-transformers
+psycopg[binary]
+pgvector
+numpy
+fastapi
+uvicorn
+requests

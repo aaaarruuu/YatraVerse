@@ -8,11 +8,11 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Deployed backend on Render (free tier, sleeps when idle)
-    private const val BASE_URL = "https://yatraverse-bnv5.onrender.com/"
+    // Local testing with the emulator (backend + AI service running on your PC)
+    private const val BASE_URL = "http://10.0.2.2:8080/"
 
-    // For local testing with the emulator, use this instead:
-    // private const val BASE_URL = "http://10.0.2.2:8080/"
+    // Deployed backend on Render (free tier, sleeps when idle). No /api/chat there yet.
+    // private const val BASE_URL = "https://yatraverse-bnv5.onrender.com/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
