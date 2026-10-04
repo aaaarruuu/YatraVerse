@@ -19,17 +19,22 @@ public class AiClient {
 
     private final RestClient restClient;
 
-    public AiClient(@Value("${ai.service.url}") String baseUrl) {
+    public AiClient(@Value("${ai.service.url}") String baseUrl,
+                    @Value("${ai.service.key:}") String apiKey) {
         HttpClient http = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
         JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(http);
         factory.setReadTimeout(Duration.ofSeconds(120));
-        this.restClient = RestClient.builder()
+
+        RestClient.Builder builder = RestClient.builder()
                 .baseUrl(baseUrl)
-                .requestFactory(factory)
-                .build();
+                .requestFactory(factory);
+        if (!apiKey.isBlank()) {
+            builder.defaultHeader("X-API-Key", apiKey);
+        }
+        this.restClient = builder.build();
     }
 
     public ChatResponse chat(ChatRequest request) {

@@ -4,20 +4,34 @@ Run from the ai-service folder:
     uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 Needs DATABASE_URL set, and Ollama running with qwen3:4b pulled.
+Set AI_SERVICE_KEY to require an X-API-Key header on /chat.
 """
+import hmac
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from app.rag.answer import answer
 from app.rag.retrieve import get_model
 
+AI_SERVICE_KEY = os.getenv("AI_SERVICE_KEY", "")
+
+
+def require_key(x_api_key: str = Header(default="")):
+    if not AI_SERVICE_KEY:
+        return  # key not configured: local development only
+    if not hmac.compare_digest(x_api_key.encode(), AI_SERVICE_KEY.encode()):
+        raise HTTPException(status_code=401, detail="invalid or missing API key")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not AI_SERVICE_KEY:
+        print("WARNING: AI_SERVICE_KEY is not set, /chat is unprotected")
     get_model()  # load BGE-M3 once at startup
     yield
 
@@ -55,7 +69,7 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat", response_model=ChatResponse, dependencies=[Depends(require_key)])
 def chat(req: ChatRequest):
     question = req.question.strip()
     if not question:
