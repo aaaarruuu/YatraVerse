@@ -2062,7 +2062,3 @@ Next:   deploy the AI service, refresh tokens and roles, move app data to
 YatraVerse AI is being developed as a collaborative academic and learning project focused on building an end-to-end smart tourism ecosystem using Android, Spring Boot (Security + WebSocket), PostgreSQL + PGVector, MinIO, OpenStreetMap/MapLibre, Machine Learning, Computer Vision, Qwen3 8B, and Retrieval-Augmented Generation.
 
 ---
-
-# Final Goal
-
-> **YatraVerse AI aims to become an intelligent, personalized, safe, sustainable, and culturally aware tourism platform while providing the development team with hands-on experience in modern software engineering and applied LLM/RAG engineering, built on a self-hosted, vendor-independent stack.**
